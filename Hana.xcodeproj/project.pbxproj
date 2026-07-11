@@ -1,0 +1,653 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		906F6D9E2FB1F175001C9FD1 /* SwiftVLC in Frameworks */ = {isa = PBXBuildFile; productRef = 906F6D9D2FB1F175001C9FD1 /* SwiftVLC */; };
+		E907D8872FFAF09600F2451B /* MarqueeText in Frameworks */ = {isa = PBXBuildFile; productRef = E907D8862FFAF09600F2451B /* MarqueeText */; };
+		E99C31A52FFEF38C00537130 /* HoshiReader in Frameworks */ = {isa = PBXBuildFile; productRef = E99C31A42FFEF38C00537130 /* HoshiReader */; };
+		E99C31A82FFEF3CD00537130 /* PersistedObservation in Frameworks */ = {isa = PBXBuildFile; productRef = E99C31A72FFEF3CD00537130 /* PersistedObservation */; };
+		E99C31AB2FFEF46F00537130 /* FFmpeg-iOS in Frameworks */ = {isa = PBXBuildFile; productRef = E99C31AA2FFEF46F00537130 /* FFmpeg-iOS */; };
+		E9A591322FE8343600405778 /* PersistedObservation in Frameworks */ = {isa = PBXBuildFile; productRef = E9A591312FE8343600405778 /* PersistedObservation */; };
+		E9A790552FEDA583006ABA4F /* HoshiReader in Frameworks */ = {isa = PBXBuildFile; productRef = E9A790542FEDA583006ABA4F /* HoshiReader */; };
+		E9D113D13002776C00DA898C /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = E9D113973002776B00DA898C /* Assets.xcassets */; };
+		E9D113D23002776C00DA898C /* HanaIcon.icon in Resources */ = {isa = PBXBuildFile; fileRef = E9D113983002776B00DA898C /* HanaIcon.icon */; };
+		E9F771192FF655D9005E7EC3 /* FFmpeg-iOS in Frameworks */ = {isa = PBXBuildFile; productRef = E9F771182FF655D9005E7EC3 /* FFmpeg-iOS */; };
+		E9FB428F2FE1B70200D13EB2 /* SWXMLHash in Frameworks */ = {isa = PBXBuildFile; productRef = E9FB428E2FE1B70200D13EB2 /* SWXMLHash */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		906F6D8E2FB1F125001C9FD1 /* Hana.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Hana.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		E9D113973002776B00DA898C /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		E9D113983002776B00DA898C /* HanaIcon.icon */ = {isa = PBXFileReference; lastKnownFileType = folder.iconcomposer.icon; path = HanaIcon.icon; sourceTree = "<group>"; };
+		E9D113993002776B00DA898C /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		E9D114543002778500DA898C /* Exceptions for "Core" folder in "Hana" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				FileStorage.swift,
+				JimakuManager.swift,
+				MediaExtractor.swift,
+				SubtitleParser.swift,
+				UserConfig.swift,
+				WebDavManager.swift,
+			);
+			target = 906F6D8D2FB1F125001C9FD1 /* Hana */;
+		};
+		E9D114553002778500DA898C /* Exceptions for "DesignSystem" folder in "Hana" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				HanaPalette.swift,
+			);
+			target = 906F6D8D2FB1F125001C9FD1 /* Hana */;
+		};
+		E9D114563002778500DA898C /* Exceptions for "Extensions" folder in "Hana" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				"Duration+.swift",
+				Logger.swift,
+				"UIScreen+.swift",
+				"URL+.swift",
+				"View+.swift",
+				"View+Orientation.swift",
+			);
+			target = 906F6D8D2FB1F125001C9FD1 /* Hana */;
+		};
+		E9D114573002778500DA898C /* Exceptions for "Features" folder in "Hana" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				FileBrowser/FileBrowserScreen.swift,
+				FileBrowser/FileBrowserView.swift,
+				FileBrowser/HistoryCollectionView.swift,
+				FileBrowser/HistoryTileUIKitView.swift,
+				HomeScreen/HomeScreenView.swift,
+				Settings/AboutView.swift,
+				Settings/DictionarySettingsRoute.swift,
+				Settings/SettingsStyle.swift,
+				Settings/SettingsView.swift,
+				Settings/VideoPlayerSettingsRoute.swift,
+				Settings/WebStorageSettingsRoute.swift,
+				Subtitles/SubtitlesFullScreenView.swift,
+				Subtitles/SubtitlesTableView.swift,
+				Subtitles/UISubtitlesTableViewCell.swift,
+				Subtitles/UITappableLabel.swift,
+				Subtitles/VideoSubtitleView.swift,
+				VideoPlayer/Gestures/VideoPlayerGestureModifier.swift,
+				VideoPlayer/Gestures/VideoPlayerGestures.swift,
+				VideoPlayer/Jimaku/JimakuSearchView.swift,
+				VideoPlayer/Models/VideoContentMode.swift,
+				VideoPlayer/Models/VideoItem.swift,
+				VideoPlayer/Models/VideoPlayerBookmark.swift,
+				VideoPlayer/Models/VideoPlayerHUDState.swift,
+				VideoPlayer/Models/VideoSubtitleStorage.swift,
+				VideoPlayer/Util/VideoPlayerFormatters.swift,
+				VideoPlayer/ViewModels/VideoPlayerControlsVisibilityModel.swift,
+				VideoPlayer/ViewModels/VideoPlayerHUDModel.swift,
+				VideoPlayer/ViewModels/VideoPlayerViewModel.swift,
+				VideoPlayer/Views/VideoPlayerAdvancedSettingsPlaceholder.swift,
+				VideoPlayer/Views/VideoPlayerControls.swift,
+				VideoPlayer/Views/VideoPlayerGestureTutorialOverlay.swift,
+				VideoPlayer/Views/VideoPlayerHUD.swift,
+				VideoPlayer/Views/VideoPlayerView.swift,
+				VideoPlayer/Views/VolumeObserverView.swift,
+			);
+			target = 906F6D8D2FB1F125001C9FD1 /* Hana */;
+		};
+		E9D114583002778500DA898C /* Exceptions for "Models" folder in "Hana" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Jimaku.swift,
+				WebDav.swift,
+			);
+			target = 906F6D8D2FB1F125001C9FD1 /* Hana */;
+		};
+		E9D114593002778500DA898C /* Exceptions for "Pictures" folder in "Hana" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				browser.PNG,
+				controls.PNG,
+				gestures.PNG,
+				popup.PNG,
+				subtitle_list.PNG,
+			);
+			target = 906F6D8D2FB1F125001C9FD1 /* Hana */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
+/* Begin PBXFileSystemSynchronizedRootGroup section */
+		E9D113D53002778400DA898C /* App */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = App;
+			sourceTree = "<group>";
+		};
+		E9D113DC3002778400DA898C /* Core */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				E9D114543002778500DA898C /* Exceptions for "Core" folder in "Hana" target */,
+			);
+			path = Core;
+			sourceTree = "<group>";
+		};
+		E9D113DE3002778400DA898C /* DesignSystem */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				E9D114553002778500DA898C /* Exceptions for "DesignSystem" folder in "Hana" target */,
+			);
+			path = DesignSystem;
+			sourceTree = "<group>";
+		};
+		E9D113E53002778400DA898C /* Extensions */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				E9D114563002778500DA898C /* Exceptions for "Extensions" folder in "Hana" target */,
+			);
+			path = Extensions;
+			sourceTree = "<group>";
+		};
+		E9D114133002778400DA898C /* Features */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				E9D114573002778500DA898C /* Exceptions for "Features" folder in "Hana" target */,
+			);
+			path = Features;
+			sourceTree = "<group>";
+		};
+		E9D114163002778400DA898C /* Models */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				E9D114583002778500DA898C /* Exceptions for "Models" folder in "Hana" target */,
+			);
+			path = Models;
+			sourceTree = "<group>";
+		};
+		E9D1141C3002778400DA898C /* Pictures */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				E9D114593002778500DA898C /* Exceptions for "Pictures" folder in "Hana" target */,
+			);
+			path = Pictures;
+			sourceTree = "<group>";
+		};
+/* End PBXFileSystemSynchronizedRootGroup section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		906F6D8B2FB1F125001C9FD1 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				E907D8872FFAF09600F2451B /* MarqueeText in Frameworks */,
+				E9FB428F2FE1B70200D13EB2 /* SWXMLHash in Frameworks */,
+				E9F771192FF655D9005E7EC3 /* FFmpeg-iOS in Frameworks */,
+				E99C31A82FFEF3CD00537130 /* PersistedObservation in Frameworks */,
+				E9A790552FEDA583006ABA4F /* HoshiReader in Frameworks */,
+				E99C31A52FFEF38C00537130 /* HoshiReader in Frameworks */,
+				906F6D9E2FB1F175001C9FD1 /* SwiftVLC in Frameworks */,
+				E99C31AB2FFEF46F00537130 /* FFmpeg-iOS in Frameworks */,
+				E9A591322FE8343600405778 /* PersistedObservation in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		906F6D852FB1F125001C9FD1 = {
+			isa = PBXGroup;
+			children = (
+				E9D113D53002778400DA898C /* App */,
+				E9D113DC3002778400DA898C /* Core */,
+				E9D113DE3002778400DA898C /* DesignSystem */,
+				E9D113E53002778400DA898C /* Extensions */,
+				E9D114133002778400DA898C /* Features */,
+				E9D114163002778400DA898C /* Models */,
+				E9D1141C3002778400DA898C /* Pictures */,
+				E9D113973002776B00DA898C /* Assets.xcassets */,
+				E9D113983002776B00DA898C /* HanaIcon.icon */,
+				E9D113993002776B00DA898C /* Info.plist */,
+				906F6D8F2FB1F125001C9FD1 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		906F6D8F2FB1F125001C9FD1 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				906F6D8E2FB1F125001C9FD1 /* Hana.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		906F6D8D2FB1F125001C9FD1 /* Hana */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 906F6D992FB1F127001C9FD1 /* Build configuration list for PBXNativeTarget "Hana" */;
+			buildPhases = (
+				906F6D8A2FB1F125001C9FD1 /* Sources */,
+				906F6D8B2FB1F125001C9FD1 /* Frameworks */,
+				906F6D8C2FB1F125001C9FD1 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				E9D113D53002778400DA898C /* App */,
+			);
+			name = Hana;
+			packageProductDependencies = (
+				906F6D9D2FB1F175001C9FD1 /* SwiftVLC */,
+				E9FB428E2FE1B70200D13EB2 /* SWXMLHash */,
+				E9A591312FE8343600405778 /* PersistedObservation */,
+				E9A790542FEDA583006ABA4F /* HoshiReader */,
+				E9F771182FF655D9005E7EC3 /* FFmpeg-iOS */,
+				E907D8862FFAF09600F2451B /* MarqueeText */,
+				E99C31A42FFEF38C00537130 /* HoshiReader */,
+				E99C31A72FFEF3CD00537130 /* PersistedObservation */,
+				E99C31AA2FFEF46F00537130 /* FFmpeg-iOS */,
+			);
+			productName = Hana;
+			productReference = 906F6D8E2FB1F125001C9FD1 /* Hana.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		906F6D862FB1F125001C9FD1 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 2650;
+				LastUpgradeCheck = 2650;
+				TargetAttributes = {
+					906F6D8D2FB1F125001C9FD1 = {
+						CreatedOnToolsVersion = 26.5;
+					};
+				};
+			};
+			buildConfigurationList = 906F6D892FB1F125001C9FD1 /* Build configuration list for PBXProject "Hana" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = 906F6D852FB1F125001C9FD1;
+			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				906F6D9C2FB1F175001C9FD1 /* XCRemoteSwiftPackageReference "SwiftVLC" */,
+				E9FB428D2FE1B70200D13EB2 /* XCRemoteSwiftPackageReference "SWXMLHash" */,
+				E907D8852FFAF09600F2451B /* XCRemoteSwiftPackageReference "MarqueeText" */,
+				E99C31A32FFEF38C00537130 /* XCRemoteSwiftPackageReference "Hoshi-Reader" */,
+				E99C31A62FFEF3CD00537130 /* XCRemoteSwiftPackageReference "PersistedObservation" */,
+				E99C31A92FFEF46F00537130 /* XCRemoteSwiftPackageReference "FFmpeg-iOS" */,
+			);
+			preferredProjectObjectVersion = 77;
+			productRefGroup = 906F6D8F2FB1F125001C9FD1 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				906F6D8D2FB1F125001C9FD1 /* Hana */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		906F6D8C2FB1F125001C9FD1 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				E9D113D13002776C00DA898C /* Assets.xcassets in Resources */,
+				E9D113D23002776C00DA898C /* HanaIcon.icon in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		906F6D8A2FB1F125001C9FD1 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		906F6D972FB1F127001C9FD1 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEVELOPMENT_TEAM = 3553HPS8CC;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.5;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		906F6D982FB1F127001C9FD1 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEVELOPMENT_TEAM = 3553HPS8CC;
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.5;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		906F6D9A2FB1F127001C9FD1 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = HanaIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 4;
+				DEVELOPMENT_TEAM = CP95PW5V2S;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = Hana;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.video";
+				INFOPLIST_KEY_LSSupportsOpeningDocumentsInPlace = YES;
+				INFOPLIST_KEY_NSLocalNetworkUsageDescription = "Allow Hana to access AnkiConnect instances on your local network.";
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 0.1.0;
+				OTHER_SWIFT_FLAGS = "";
+				PRODUCT_BUNDLE_IDENTIFIER = com.youwu.Hana;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = nonisolated;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_OBJC_INTEROP_MODE = objcxx;
+				SWIFT_STRICT_CONCURRENCY = complete;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		906F6D9B2FB1F127001C9FD1 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = HanaIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 4;
+				DEVELOPMENT_TEAM = CP95PW5V2S;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = Hana;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.video";
+				INFOPLIST_KEY_LSSupportsOpeningDocumentsInPlace = YES;
+				INFOPLIST_KEY_NSLocalNetworkUsageDescription = "Allow Hana to access AnkiConnect instances on your local network.";
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 0.1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.youwu.Hana;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = nonisolated;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_OBJC_INTEROP_MODE = objcxx;
+				SWIFT_STRICT_CONCURRENCY = complete;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		906F6D892FB1F125001C9FD1 /* Build configuration list for PBXProject "Hana" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				906F6D972FB1F127001C9FD1 /* Debug */,
+				906F6D982FB1F127001C9FD1 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		906F6D992FB1F127001C9FD1 /* Build configuration list for PBXNativeTarget "Hana" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				906F6D9A2FB1F127001C9FD1 /* Debug */,
+				906F6D9B2FB1F127001C9FD1 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		906F6D9C2FB1F175001C9FD1 /* XCRemoteSwiftPackageReference "SwiftVLC" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/harflabs/SwiftVLC";
+			requirement = {
+				branch = main;
+				kind = branch;
+			};
+		};
+		E907D8852FFAF09600F2451B /* XCRemoteSwiftPackageReference "MarqueeText" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/harflabs/MarqueeText";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.1.0;
+			};
+		};
+		E99C31A32FFEF38C00537130 /* XCRemoteSwiftPackageReference "Hoshi-Reader" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/harukawu/Hoshi-Reader";
+			requirement = {
+				branch = "hana-package";
+				kind = branch;
+			};
+		};
+		E99C31A62FFEF3CD00537130 /* XCRemoteSwiftPackageReference "PersistedObservation" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/harukawu/PersistedObservation";
+			requirement = {
+				branch = main;
+				kind = branch;
+			};
+		};
+		E99C31A92FFEF46F00537130 /* XCRemoteSwiftPackageReference "FFmpeg-iOS" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/harukawu/FFmpeg-iOS";
+			requirement = {
+				branch = lgpl;
+				kind = branch;
+			};
+		};
+		E9FB428D2FE1B70200D13EB2 /* XCRemoteSwiftPackageReference "SWXMLHash" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/drmohundro/SWXMLHash.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 8.1.1;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		906F6D9D2FB1F175001C9FD1 /* SwiftVLC */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 906F6D9C2FB1F175001C9FD1 /* XCRemoteSwiftPackageReference "SwiftVLC" */;
+			productName = SwiftVLC;
+		};
+		E907D8862FFAF09600F2451B /* MarqueeText */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = E907D8852FFAF09600F2451B /* XCRemoteSwiftPackageReference "MarqueeText" */;
+			productName = MarqueeText;
+		};
+		E99C31A42FFEF38C00537130 /* HoshiReader */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = E99C31A32FFEF38C00537130 /* XCRemoteSwiftPackageReference "Hoshi-Reader" */;
+			productName = HoshiReader;
+		};
+		E99C31A72FFEF3CD00537130 /* PersistedObservation */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = E99C31A62FFEF3CD00537130 /* XCRemoteSwiftPackageReference "PersistedObservation" */;
+			productName = PersistedObservation;
+		};
+		E99C31AA2FFEF46F00537130 /* FFmpeg-iOS */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = E99C31A92FFEF46F00537130 /* XCRemoteSwiftPackageReference "FFmpeg-iOS" */;
+			productName = "FFmpeg-iOS";
+		};
+		E9A591312FE8343600405778 /* PersistedObservation */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = PersistedObservation;
+		};
+		E9A790542FEDA583006ABA4F /* HoshiReader */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = HoshiReader;
+		};
+		E9F771182FF655D9005E7EC3 /* FFmpeg-iOS */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = "FFmpeg-iOS";
+		};
+		E9FB428E2FE1B70200D13EB2 /* SWXMLHash */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = E9FB428D2FE1B70200D13EB2 /* XCRemoteSwiftPackageReference "SWXMLHash" */;
+			productName = SWXMLHash;
+		};
+/* End XCSwiftPackageProductDependency section */
+	};
+	rootObject = 906F6D862FB1F125001C9FD1 /* Project object */;
+}

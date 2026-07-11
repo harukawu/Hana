@@ -1,0 +1,132 @@
+{
+  "originHash" : "5480e0c7b96d9661ca9fda4ce026e1fd77d9a8c00a19a922c26883ffcf18cfd3",
+  "pins" : [
+    {
+      "identity" : "aexml",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/tadija/AEXML",
+      "state" : {
+        "revision" : "db806756c989760b35108146381535aec231092b",
+        "version" : "4.7.0"
+      }
+    },
+    {
+      "identity" : "ffmpeg-ios",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/harukawu/FFmpeg-iOS",
+      "state" : {
+        "branch" : "lgpl",
+        "revision" : "73443859f8167d87a6bd23b3791686bc400afe47"
+      }
+    },
+    {
+      "identity" : "ffmpeg-ios-support",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/kewlbear/FFmpeg-iOS-Support",
+      "state" : {
+        "revision" : "be3bd9149ac53760e8725652eee99c405b2be47a",
+        "version" : "0.0.2"
+      }
+    },
+    {
+      "identity" : "hoshi-reader",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/harukawu/Hoshi-Reader",
+      "state" : {
+        "branch" : "hana-package",
+        "revision" : "428f62509352dfe86e1876bba58b3225ae9f9271"
+      }
+    },
+    {
+      "identity" : "hoshidicts",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/Manhhao/hoshidicts.git",
+      "state" : {
+        "branch" : "main",
+        "revision" : "909c85404f95e6bc82fdf24fa94a76fbc3c3cc75"
+      }
+    },
+    {
+      "identity" : "marqueetext",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/harflabs/MarqueeText",
+      "state" : {
+        "revision" : "129da72ff532727e2bc69735423120eab377788a",
+        "version" : "1.1.0"
+      }
+    },
+    {
+      "identity" : "persistedobservation",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/harukawu/PersistedObservation",
+      "state" : {
+        "branch" : "main",
+        "revision" : "e3c6584336dd8163ea33d68466c068abfecde677"
+      }
+    },
+    {
+      "identity" : "swift-argument-parser",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/apple/swift-argument-parser",
+      "state" : {
+        "revision" : "6b2aa2748a7881eebb9f84fb10c01293e15b52ca",
+        "version" : "0.5.0"
+      }
+    },
+    {
+      "identity" : "swift-syntax",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/swiftlang/swift-syntax.git",
+      "state" : {
+        "revision" : "79e4b74a295b6eb74a8b585e3a39d29e70c1dbd1",
+        "version" : "603.0.2"
+      }
+    },
+    {
+      "identity" : "swiftui-introspect",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/siteline/SwiftUI-Introspect",
+      "state" : {
+        "revision" : "26986a57e31c813f98262ddb62d4b07d40008535",
+        "version" : "26.0.1"
+      }
+    },
+    {
+      "identity" : "swiftvlc",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/harflabs/SwiftVLC",
+      "state" : {
+        "branch" : "main",
+        "revision" : "9065ad6338ddd2d689bf6220b45e90ab4695b3a8"
+      }
+    },
+    {
+      "identity" : "swxmlhash",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/drmohundro/SWXMLHash.git",
+      "state" : {
+        "revision" : "9cfb8730651ae7f57a6f5d413e2f07be7d7dbd41",
+        "version" : "8.1.1"
+      }
+    },
+    {
+      "identity" : "zipfoundation",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/weichsel/ZIPFoundation.git",
+      "state" : {
+        "revision" : "22787ffb59de99e5dc1fbfe80b19c97a904ad48d",
+        "version" : "0.9.20"
+      }
+    },
+    {
+      "identity" : "zstd",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/facebook/zstd.git",
+      "state" : {
+        "revision" : "f8745da6ff1ad1e7bab384bd1f9d742439278e99",
+        "version" : "1.5.7"
+      }
+    }
+  ],
+  "version" : 3
+}

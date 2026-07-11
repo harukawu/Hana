@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+  <title>Sakura Video Icon — Play button white face</title>
+  <defs>
+    <linearGradient id="playFace" x1="443" y1="427" x2="604" y2="628" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#fffefe"/>
+      <stop offset=".7" stop-color="#fffafa"/>
+      <stop offset="1" stop-color="#fff4f7"/>
+    </linearGradient>
+  </defs>
+  <path
+    d="M468 425
+       L604 507
+       C624 519 624 534 604 546
+       L468 629
+       C450 640 432 627 432 606
+       L432 447
+       C432 426 450 414 468 425 Z"
+    fill="url(#playFace)"/>
+</svg>

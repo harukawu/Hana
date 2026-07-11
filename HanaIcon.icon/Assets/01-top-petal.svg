@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+  <title>Sakura Video Icon — Top petal</title>
+  <defs>
+    <linearGradient id="topPetal" x1="383" y1="128" x2="601" y2="535" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#ffb7d0"/>
+      <stop offset=".48" stop-color="#f990b6"/>
+      <stop offset="1" stop-color="#f45a91"/>
+    </linearGradient>
+  </defs>
+  <path
+    d="M512 156
+       C502 133 494 118 472 109
+       C411 143 378 202 377 265
+       C376 341 410 400 454 454
+       C478 484 497 516 512 548
+       C529 515 548 483 572 453
+       C615 399 647 340 646 265
+       C645 201 611 142 552 109
+       C529 119 520 133 512 156 Z"
+    fill="url(#topPetal)"
+    stroke="#fffdfd"
+    stroke-opacity=".82"
+    stroke-width="4"
+    stroke-linejoin="round"/>
+</svg>

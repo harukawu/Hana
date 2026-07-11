@@ -1,0 +1,114 @@
+{
+  "fill" : "system-light",
+  "groups" : [
+    {
+      "hidden" : false,
+      "layers" : [
+        {
+          "blend-mode" : "soft-light",
+          "fill" : "none",
+          "glass" : false,
+          "hidden" : false,
+          "image-name" : "06-play-rim.svg",
+          "name" : "06-play-rim",
+          "opacity" : 0.4
+        },
+        {
+          "fill" : {
+            "solid" : "display-p3:0.96783,0.61602,0.71497,1.00000"
+          },
+          "hidden" : false,
+          "image-name" : "07-play-face.svg",
+          "name" : "07-play-face"
+        }
+      ],
+      "name" : "Button",
+      "shadow" : {
+        "kind" : "neutral",
+        "opacity" : 0.6
+      },
+      "translucency" : {
+        "enabled" : true,
+        "value" : 0.2
+      }
+    },
+    {
+      "blur-material" : null,
+      "layers" : [
+        {
+          "fill" : "automatic",
+          "glass" : false,
+          "hidden" : false,
+          "image-name" : "01-top-petal.svg",
+          "name" : "01-top-petal",
+          "opacity" : 0.7
+        },
+        {
+          "fill" : "automatic",
+          "glass" : false,
+          "hidden" : false,
+          "image-name" : "02-left-petal.svg",
+          "name" : "02-left-petal",
+          "opacity" : 0.7
+        },
+        {
+          "glass" : false,
+          "hidden" : false,
+          "image-name" : "03-right-petal.svg",
+          "name" : "03-right-petal",
+          "opacity" : 0.7
+        },
+        {
+          "glass" : false,
+          "hidden" : false,
+          "image-name" : "04-bottom-right-petal.svg",
+          "name" : "04-bottom-right-petal",
+          "opacity" : 0.7
+        },
+        {
+          "glass" : false,
+          "hidden" : false,
+          "image-name" : "05-bottom-left-petal.svg",
+          "name" : "05-bottom-left-petal",
+          "opacity" : 0.7
+        }
+      ],
+      "name" : "Petals",
+      "shadow" : {
+        "kind" : "neutral",
+        "opacity" : 0.6
+      },
+      "translucency" : {
+        "enabled" : false,
+        "value" : 0.2
+      }
+    },
+    {
+      "layers" : [
+        {
+          "blend-mode" : "normal",
+          "fill" : "none",
+          "glass" : true,
+          "hidden" : false,
+          "image-name" : "00-background.svg",
+          "name" : "00-background"
+        }
+      ],
+      "name" : "Background",
+      "shadow" : {
+        "kind" : "neutral",
+        "opacity" : 0.6
+      },
+      "translucency" : {
+        "enabled" : true,
+        "value" : 0.2
+      }
+    }
+  ],
+  "supported-platforms" : {
+    "circles" : [
+      "watchOS"
+    ],
+    "squares" : "shared"
+  }
+}

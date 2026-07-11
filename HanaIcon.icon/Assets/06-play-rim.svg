@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+  <title>Sakura Video Icon — Play button pink rim</title>
+  <defs>
+    <linearGradient id="playRim" x1="421" y1="408" x2="623" y2="646" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#ea285f"/>
+      <stop offset=".48" stop-color="#f43f76"/>
+      <stop offset="1" stop-color="#ff83a8"/>
+    </linearGradient>
+  </defs>
+  <path
+    d="M469 409
+       L613 496
+       C643 514 643 539 613 557
+       L469 645
+       C443 661 419 642 419 612
+       L419 442
+       C419 411 443 394 469 409 Z"
+    fill="url(#playRim)"/>
+</svg>
