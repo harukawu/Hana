@@ -13,15 +13,17 @@ import UniformTypeIdentifiers
 import OSLog
 
 struct VideoPlayerView: View {
+    private let userConfig: UserConfig
+
     @State private var player: Player
     @State private var viewModel: VideoPlayerViewModel
     @State private var hudModel: VideoPlayerHUDModel
     @State private var controlsVisibilityModel: VideoPlayerControlsVisibilityModel
+    @State private var subtitleState: SubtitleState
     @State private var isPlayingBeforeLookup = true
     @State private var pipController: PiPController?
     @State private var isGestureTutorialPresented = false
     
-    @Environment(PersistedUserConfig.self) private var userConfig
     @Environment(\.dismiss) private var dismiss
     
     @Environment(\.modelContext) private var modelContext
@@ -30,20 +32,28 @@ struct VideoPlayerView: View {
     
     private var currentCueIndex: Int? { viewModel.currentCueIndex }
     
-    init(item: VideoItem) {
+    init(
+        item: VideoItem,
+        userConfig: UserConfig
+    ) {
         let player = Player()
         let hudModel = VideoPlayerHUDModel()
         let visibilityModel = VideoPlayerControlsVisibilityModel()
+        let subtitleState = SubtitleState()
         let viewModel = VideoPlayerViewModel(
             item: item,
+            userConfig: userConfig,
             player: player,
             hudModel: hudModel,
-            controlsVisibilityModel: visibilityModel
+            controlsVisibilityModel: visibilityModel,
+            subtitleState: subtitleState
         )
+        self.userConfig = userConfig
         self.hudModel = hudModel
         self.player = player
         self.viewModel = viewModel
         self.controlsVisibilityModel = visibilityModel
+        self.subtitleState = subtitleState
     }
     
     var body: some View {
@@ -86,13 +96,20 @@ struct VideoPlayerView: View {
             .opacity(0.01)
             .allowsHitTesting(false)
         }
+        .preferLightScheme(userConfig.playbackTheme.preferLightScheme)
         .interfaceOrientation(.landscape)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .statusBarHidden(true)
         .persistentSystemOverlays(.hidden)
         .fileImporter(isPresented: $viewModel.showExternalSubtitleImporter, allowedContentTypes: [.plainText, .data]) { result in
+            let session = viewModel.playbackSession
             Task {
-                await viewModel.handleSubtitleImportResult(result, securityScoped: true)
+                // this function is aware of cancellation
+                await viewModel.importSubtitle(
+                    result,
+                    securityScoped: true,
+                    expectedSession: session
+                )
             }
         }
         .onChange(of: viewModel.item, { oldItem, newItem in
@@ -104,38 +121,23 @@ struct VideoPlayerView: View {
             }
         })
         .task(id: viewModel.playbackSession) {
-            if viewModel.isSuspendedForBackground {
-                await viewModel.runAfterPlayStart {
-                    // clear suspended states only after player starts again.
-                    // This is to avoid the case where user comes from background and then dismiss video player view
-                    viewModel.playbackSnapshotBeforeSuspended = nil
-                    viewModel.isSuspendedForBackground = false
-                }
-            } else {
-                if let persistenceTask = viewModel.persistenceTasks[viewModel.item.url] {
-                    await persistenceTask.value
-                }
-                viewModel.startPlayback()
-            }
-        }
-        .task(id: viewModel.playbackSession) {
-            await viewModel.prepareSubtitleTrackAfterPlayStart()
-        }
-        .task(id: viewModel.playbackSession) {
-            await viewModel.restorePlaybackDataFromHistory()
-        }
-        .task(id: viewModel.item.id) {
-            // This needs to be rerun after item changed since after the persistence of last item, in memory items are stale
-            await viewModel.loadItemsFromSameDirectories(modelContext: modelContext)
+            await viewModel.runPlaybackSession(modelContext: modelContext)
         }
         .onChange(of: scenePhase, { oldValue, newValue in
             viewModel.onScenePhaseChange(from: oldValue, to: newValue, modelContext: modelContext)
         })
+        .onChange(of: player.currentTime, { _, currentTime in
+            viewModel.refreshNowPlayingInfo(currentTime: currentTime)
+        })
+        .onAppear {
+            viewModel.activateSystemMediaManager()
+        }
         .onDisappear {
-            viewModel.persistVideoItem(viewModel.item, modelContext: modelContext)
-            viewModel.stopPlayback()
+            viewModel.onPlayerViewDisappear(modelContext: modelContext)
         }
         .onChange(of: player.isPlaying, { _, isPlaying in
+            viewModel.refreshNowPlayingInfo(currentTime: player.currentTime, force: true)
+            
             if isPlaying {
                 controlsVisibilityModel.scheduleAutoHide()
             } else {
@@ -172,13 +174,13 @@ extension VideoPlayerView {
     
     @ViewBuilder
     var subtitleView: some View {
-        if let selectedSubtitleTrackIndex = viewModel.selectedSubtitleTrackIndex,
+        if let selectedSubtitleTrackIndex = subtitleState.selectedSubtitleTrackIndex,
            let currentCueIndex,
            userConfig.nativeSubtitleRendering,
-           viewModel.hiddenSubtitleTrackIndex == nil {
+           subtitleState.hiddenSubtitleTrackIndex == nil {
             VideoSubtitleView(
                 cueIndex: currentCueIndex,
-                subtitles: viewModel.nativeSubtitles[selectedSubtitleTrackIndex],
+                subtitles: subtitleState.nativeSubtitles[selectedSubtitleTrackIndex],
                 subtitleDelay: viewModel.subtitleDelay,
                 videoURL: viewModel.item.url,
                 videoTitle: viewModel.item.displayTitle,
@@ -209,6 +211,7 @@ extension VideoPlayerView {
         if controlsVisibilityModel.isVisible {
             VideoPlayerControls(
                 player: player,
+                subtitleState: subtitleState,
                 viewModel: viewModel,
                 bookmarks: viewModel.bookmarks,
                 dismiss: dismiss,
@@ -236,9 +239,14 @@ extension VideoPlayerView {
     
     var jimakuSearchView: some View {
         JimakuSearchView(initialQuery: viewModel.item.displayTitle) { jimakuFile in
+            let session = viewModel.playbackSession
             Task {
                 let localURL = try await JimakuManager.downloadSubtitle(from: jimakuFile)
-                await viewModel.handleSubtitleImportResult(.success(localURL), securityScoped: false)
+                await viewModel.importSubtitle(
+                    .success(localURL),
+                    securityScoped: false,
+                    expectedSession: session
+                )
             }
         }
         .onAppear {
@@ -253,12 +261,12 @@ extension VideoPlayerView {
     
     @ViewBuilder
     var subtitlesFullscreenView: some View {
-        if let selectedSubtitleTrackIndex = viewModel.selectedSubtitleTrackIndex,
-           selectedSubtitleTrackIndex < viewModel.nativeSubtitles.count {
+        if let selectedSubtitleTrackIndex = subtitleState.selectedSubtitleTrackIndex,
+           selectedSubtitleTrackIndex < subtitleState.nativeSubtitles.count {
             SubtitlesFullScreenView(
                 videoTitle: viewModel.item.displayTitle,
                 videoURL: viewModel.item.url,
-                subtitles: viewModel.nativeSubtitles[selectedSubtitleTrackIndex],
+                subtitles: subtitleState.nativeSubtitles[selectedSubtitleTrackIndex],
                 subtitleDelay: viewModel.subtitleDelay,
                 initialRequest: nil,
                 highlightedIndex: currentCueIndex ?? viewModel.lastKnownCueIndex,

@@ -9,10 +9,9 @@
 /* Begin PBXBuildFile section */
 		906F6D9E2FB1F175001C9FD1 /* SwiftVLC in Frameworks */ = {isa = PBXBuildFile; productRef = 906F6D9D2FB1F175001C9FD1 /* SwiftVLC */; };
 		E907D8872FFAF09600F2451B /* MarqueeText in Frameworks */ = {isa = PBXBuildFile; productRef = E907D8862FFAF09600F2451B /* MarqueeText */; };
+		E994B7AB300CD41100FB30B1 /* ObservableDefaults in Frameworks */ = {isa = PBXBuildFile; productRef = E994B7AA300CD41100FB30B1 /* ObservableDefaults */; };
 		E99C31A52FFEF38C00537130 /* HoshiReader in Frameworks */ = {isa = PBXBuildFile; productRef = E99C31A42FFEF38C00537130 /* HoshiReader */; };
-		E99C31A82FFEF3CD00537130 /* PersistedObservation in Frameworks */ = {isa = PBXBuildFile; productRef = E99C31A72FFEF3CD00537130 /* PersistedObservation */; };
 		E99C31AB2FFEF46F00537130 /* FFmpeg-iOS in Frameworks */ = {isa = PBXBuildFile; productRef = E99C31AA2FFEF46F00537130 /* FFmpeg-iOS */; };
-		E9A591322FE8343600405778 /* PersistedObservation in Frameworks */ = {isa = PBXBuildFile; productRef = E9A591312FE8343600405778 /* PersistedObservation */; };
 		E9A790552FEDA583006ABA4F /* HoshiReader in Frameworks */ = {isa = PBXBuildFile; productRef = E9A790542FEDA583006ABA4F /* HoshiReader */; };
 		E9D113D13002776C00DA898C /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = E9D113973002776B00DA898C /* Assets.xcassets */; };
 		E9D113D23002776C00DA898C /* HanaIcon.icon in Resources */ = {isa = PBXBuildFile; fileRef = E9D113983002776B00DA898C /* HanaIcon.icon */; };
@@ -28,6 +27,13 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		E99B7F38300731AD00DF438F /* Exceptions for "Util" folder in "Hana" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				SubtitleMatcher.swift,
+			);
+			target = 906F6D8D2FB1F125001C9FD1 /* Hana */;
+		};
 		E9D114543002778500DA898C /* Exceptions for "Core" folder in "Hana" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
@@ -87,6 +93,8 @@
 				VideoPlayer/Models/VideoPlayerHUDState.swift,
 				VideoPlayer/Models/VideoSubtitleStorage.swift,
 				VideoPlayer/Util/VideoPlayerFormatters.swift,
+				VideoPlayer/ViewModels/SubtitleState.swift,
+				VideoPlayer/ViewModels/SystemMediaManager.swift,
 				VideoPlayer/ViewModels/VideoPlayerControlsVisibilityModel.swift,
 				VideoPlayer/ViewModels/VideoPlayerHUDModel.swift,
 				VideoPlayer/ViewModels/VideoPlayerViewModel.swift,
@@ -102,6 +110,7 @@
 		E9D114583002778500DA898C /* Exceptions for "Models" folder in "Hana" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
+				Appearance.swift,
 				Jimaku.swift,
 				WebDav.swift,
 			);
@@ -121,6 +130,14 @@
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
+		E99B7F2F3007313A00DF438F /* Util */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				E99B7F38300731AD00DF438F /* Exceptions for "Util" folder in "Hana" target */,
+			);
+			path = Util;
+			sourceTree = "<group>";
+		};
 		E9D113D53002778400DA898C /* App */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			path = App;
@@ -184,12 +201,11 @@
 				E907D8872FFAF09600F2451B /* MarqueeText in Frameworks */,
 				E9FB428F2FE1B70200D13EB2 /* SWXMLHash in Frameworks */,
 				E9F771192FF655D9005E7EC3 /* FFmpeg-iOS in Frameworks */,
-				E99C31A82FFEF3CD00537130 /* PersistedObservation in Frameworks */,
 				E9A790552FEDA583006ABA4F /* HoshiReader in Frameworks */,
 				E99C31A52FFEF38C00537130 /* HoshiReader in Frameworks */,
 				906F6D9E2FB1F175001C9FD1 /* SwiftVLC in Frameworks */,
 				E99C31AB2FFEF46F00537130 /* FFmpeg-iOS in Frameworks */,
-				E9A591322FE8343600405778 /* PersistedObservation in Frameworks */,
+				E994B7AB300CD41100FB30B1 /* ObservableDefaults in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -199,6 +215,7 @@
 		906F6D852FB1F125001C9FD1 = {
 			isa = PBXGroup;
 			children = (
+				E99B7F2F3007313A00DF438F /* Util */,
 				E9D113D53002778400DA898C /* App */,
 				E9D113DC3002778400DA898C /* Core */,
 				E9D113DE3002778400DA898C /* DesignSystem */,
@@ -243,13 +260,12 @@
 			packageProductDependencies = (
 				906F6D9D2FB1F175001C9FD1 /* SwiftVLC */,
 				E9FB428E2FE1B70200D13EB2 /* SWXMLHash */,
-				E9A591312FE8343600405778 /* PersistedObservation */,
 				E9A790542FEDA583006ABA4F /* HoshiReader */,
 				E9F771182FF655D9005E7EC3 /* FFmpeg-iOS */,
 				E907D8862FFAF09600F2451B /* MarqueeText */,
 				E99C31A42FFEF38C00537130 /* HoshiReader */,
-				E99C31A72FFEF3CD00537130 /* PersistedObservation */,
 				E99C31AA2FFEF46F00537130 /* FFmpeg-iOS */,
+				E994B7AA300CD41100FB30B1 /* ObservableDefaults */,
 			);
 			productName = Hana;
 			productReference = 906F6D8E2FB1F125001C9FD1 /* Hana.app */;
@@ -284,8 +300,8 @@
 				E9FB428D2FE1B70200D13EB2 /* XCRemoteSwiftPackageReference "SWXMLHash" */,
 				E907D8852FFAF09600F2451B /* XCRemoteSwiftPackageReference "MarqueeText" */,
 				E99C31A32FFEF38C00537130 /* XCRemoteSwiftPackageReference "Hoshi-Reader" */,
-				E99C31A62FFEF3CD00537130 /* XCRemoteSwiftPackageReference "PersistedObservation" */,
 				E99C31A92FFEF46F00537130 /* XCRemoteSwiftPackageReference "FFmpeg-iOS" */,
+				E994B7A9300CD41100FB30B1 /* XCRemoteSwiftPackageReference "ObservableDefaults" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 906F6D8F2FB1F125001C9FD1 /* Products */;
@@ -447,7 +463,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = HanaIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 4;
+				CURRENT_PROJECT_VERSION = 5;
 				DEVELOPMENT_TEAM = CP95PW5V2S;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -492,7 +508,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = HanaIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 4;
+				CURRENT_PROJECT_VERSION = 5;
 				DEVELOPMENT_TEAM = CP95PW5V2S;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -570,19 +586,19 @@
 				minimumVersion = 1.1.0;
 			};
 		};
+		E994B7A9300CD41100FB30B1 /* XCRemoteSwiftPackageReference "ObservableDefaults" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/fatbobman/ObservableDefaults";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.8.10;
+			};
+		};
 		E99C31A32FFEF38C00537130 /* XCRemoteSwiftPackageReference "Hoshi-Reader" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/harukawu/Hoshi-Reader";
 			requirement = {
 				branch = "hana-package";
-				kind = branch;
-			};
-		};
-		E99C31A62FFEF3CD00537130 /* XCRemoteSwiftPackageReference "PersistedObservation" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/harukawu/PersistedObservation";
-			requirement = {
-				branch = main;
 				kind = branch;
 			};
 		};
@@ -615,24 +631,20 @@
 			package = E907D8852FFAF09600F2451B /* XCRemoteSwiftPackageReference "MarqueeText" */;
 			productName = MarqueeText;
 		};
+		E994B7AA300CD41100FB30B1 /* ObservableDefaults */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = E994B7A9300CD41100FB30B1 /* XCRemoteSwiftPackageReference "ObservableDefaults" */;
+			productName = ObservableDefaults;
+		};
 		E99C31A42FFEF38C00537130 /* HoshiReader */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = E99C31A32FFEF38C00537130 /* XCRemoteSwiftPackageReference "Hoshi-Reader" */;
 			productName = HoshiReader;
 		};
-		E99C31A72FFEF3CD00537130 /* PersistedObservation */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = E99C31A62FFEF3CD00537130 /* XCRemoteSwiftPackageReference "PersistedObservation" */;
-			productName = PersistedObservation;
-		};
 		E99C31AA2FFEF46F00537130 /* FFmpeg-iOS */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = E99C31A92FFEF46F00537130 /* XCRemoteSwiftPackageReference "FFmpeg-iOS" */;
 			productName = "FFmpeg-iOS";
-		};
-		E9A591312FE8343600405778 /* PersistedObservation */ = {
-			isa = XCSwiftPackageProductDependency;
-			productName = PersistedObservation;
 		};
 		E9A790542FEDA583006ABA4F /* HoshiReader */ = {
 			isa = XCSwiftPackageProductDependency;

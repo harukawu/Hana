@@ -132,11 +132,11 @@ struct AboutView: View {
     private var appDependencies: [LicenseItem] {
         [
             LicenseItem(
-                name: "PersistedObservation",
+                name: "ObservableDefaults",
                 license: "MIT",
-                url: URL(string: "https://github.com/harukawu/PersistedObservation")!,
-                note: "Swift macro package written for Hana.",
-                text: LicenseText.mit(copyright: "Copyright (c) 2026 Haruka")
+                url: URL(string: "https://github.com/fatbobman/ObservableDefaults")!,
+                note: "UserDefaults-backed Observation support for app settings.",
+                text: LicenseText.mit(copyright: "Copyright (c) 2024 Fatbobman(东坡肘子)")
             ),
             LicenseItem(
                 name: "MarqueeText",
@@ -292,7 +292,7 @@ struct AboutView: View {
                 name: "SwiftSyntax",
                 license: "Apache-2.0",
                 url: URL(string: "https://github.com/swiftlang/swift-syntax")!,
-                note: "Used by PersistedObservation macro implementation."
+                note: "Used by the ObservableDefaults macro implementation."
             ),
             LicenseItem(
                 name: "Swift Argument Parser",

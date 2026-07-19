@@ -15,11 +15,14 @@ public struct FileBrowserScreen: View {
     @Query(sort: \VideoHistory.modificationDate, order: .reverse) private var histories: [VideoHistory]
     @Environment(\.modelContext) private var modelContext
     @Environment(\.scenePhase) private var scenePhase
-    @State private var userConfig = PersistedUserConfig.shared
+    @Environment(UserConfig.self) private var userConfig
     @State private var path = NavigationPath()
     @State private var showFileImporter: Bool = false
     @State private var refreshTrigger: UUID = UUID()
     @State private var selectedWebDAVSource: WebDavSource? = nil
+    
+    @State private var showVideoHistoryUnavailableAlert = false
+    @State private var unavailableVideoHistory: VideoHistory? = nil
     
     // we tried to use this to scroll back to leading when exiting from video.
     // However, there is several frame drop. Good job Apple.
@@ -60,7 +63,7 @@ public struct FileBrowserScreen: View {
                         FileBrowserView(currentURL: file.url, webDAVSource: selectedWebDAVSource, refreshTrigger: nil)
                     } else {
                         let item = VideoItem.getVideoItem(from: file.url, modelContext: modelContext)
-                        VideoPlayerView(item: item)
+                        VideoPlayerView(item: item, userConfig: userConfig)
                             .toolbarVisibility(.hidden, for: .tabBar)
                             .toolbarVisibility(.hidden, for: .automatic)
                             .tint(.accent)
@@ -68,11 +71,34 @@ public struct FileBrowserScreen: View {
                 }
                 .navigationDestination(for: VideoItem.self) { item in
                     // before being pushed here, the bookmark data has been resolved
-                    VideoPlayerView(item: item)
+                    VideoPlayerView(item: item, userConfig: userConfig)
                         .toolbarVisibility(.hidden, for: .tabBar)
                         .toolbarVisibility(.hidden, for: .automatic)
                         .tint(.accent)
                 }
+                .alert(
+                    "Error",
+                    isPresented: $showVideoHistoryUnavailableAlert,
+                    actions: {
+                        Button("Cancel", role: .cancel) {
+                            unavailableVideoHistory = nil
+                        }
+                        
+                        Button("Delete", role: .destructive) {
+                            if let unavailableVideoHistory {
+                                deleteHistory(unavailableVideoHistory)
+                            }
+                            unavailableVideoHistory = nil
+                        }
+                    },
+                    message: {
+                        if let unavailableVideoHistory {
+                            Text("Video \(unavailableVideoHistory.displayTitle) is moved or deleted.")
+                        } else {
+                            Text("Current video is moved or deleted.")
+                        }
+                    }
+                )
             }
         }
     }
@@ -134,10 +160,8 @@ extension FileBrowserScreen {
         var isStale = false
         guard let resolvedURL = try? URL(resolvingBookmarkData: history.urlBookmark, bookmarkDataIsStale: &isStale),
               !isStale else {
-            modelContext.delete(history)
-            withAnimation(.bouncy) {
-                try? modelContext.save()
-            }
+            showVideoHistoryUnavailableAlert = true
+            unavailableVideoHistory = history
             return
         }
         if resolvedURL != history.url {
@@ -149,6 +173,7 @@ extension FileBrowserScreen {
     private func deleteHistory(_ history: VideoHistory) {
         withAnimation(.bouncy) {
             modelContext.delete(history)
+            try? modelContext.save()
         }
     }
     
@@ -158,8 +183,8 @@ extension FileBrowserScreen {
 extension FileBrowserScreen {
     
     var supportedVideoType: [UTType] {
-        var supportedTypes = ["mp4", "mkv", "mov", "avi", "m4v", "webm"].map { supportedTypeStr in
-            UTType(filenameExtension: supportedTypeStr)!
+        var supportedTypes = VideoFileSupport.knownVideoExtensions.sorted().compactMap { fileExtension in
+            UTType(filenameExtension: fileExtension)
         }
         supportedTypes.append(.folder)
         return supportedTypes

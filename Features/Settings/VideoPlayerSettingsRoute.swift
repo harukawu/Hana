@@ -8,11 +8,14 @@
 import SwiftUI
 
 enum VideoPlayerSettingsRoute: View, CaseIterable {
+    case playback
     case subtitles
     case mining
     
     var body: some View {
         switch self {
+        case .playback:
+            PlaybackSettingsView()
         case .subtitles:
             SubtitlesSettingsView()
         case .mining:
@@ -23,6 +26,8 @@ enum VideoPlayerSettingsRoute: View, CaseIterable {
     @ViewBuilder
     var label: some View {
         switch self {
+        case .playback:
+            Label("Playback", systemImage: "play")
         case .subtitles:
             Label("Subtitles", systemImage: "captions.bubble")
         case .mining:
@@ -31,9 +36,37 @@ enum VideoPlayerSettingsRoute: View, CaseIterable {
     }
 }
 
+// MARK: - Playback Settings View
+
+struct PlaybackSettingsView: View {
+    @Environment(UserConfig.self) private var userConfig
+    
+    var body: some View {
+        @Bindable var userConfig = userConfig
+        Form {
+            Section("Theme") {
+                Picker("Theme", selection: $userConfig.playbackTheme) {
+                    ForEach(Themes.allCases, id: \.self) { mode in
+                        Text(mode.title).tag(mode)
+                    }
+                }
+                .pickerStyle(.segmented)
+            }
+            .hanaSettingsRow()
+            
+            Section("Playback") {
+                Toggle("Autoplay Next Video", isOn: $userConfig.autoplayNextVideo)
+            }
+            .hanaSettingsRow()
+        }
+        .hanaSettingsScreen()
+        .navigationTitle("Playback")
+    }
+}
+
 // MARK: - Mining settings
 struct MiningSettingsView: View {
-    @Environment(PersistedUserConfig.self) private var userConfig
+    @Environment(UserConfig.self) private var userConfig
     
     var body: some View {
         @Bindable var userConfig = userConfig
@@ -75,7 +108,7 @@ struct MiningSettingsView: View {
                 Text("Images are captured from the subtitle start time. Height limits preserve the video's aspect ratio.")
             }
             .hanaSettingsRow()
-            
+
             Section {
                 Stepper(value: $userConfig.audioOptions.bitrateKilobitsPerSecond, in: 8...320, step: 8) {
                     valueLabel(
@@ -151,11 +184,25 @@ struct MiningSettingsView: View {
 
 // MARK: - Subtitles settings
 struct SubtitlesSettingsView: View {
-    @State var userConfig = PersistedUserConfig.shared
+    @Environment(UserConfig.self) var userConfig
     @State var showSubtitleServerDetailedSheet = false
     
     var body: some View {
         Form {
+            @Bindable var userConfig = userConfig
+
+            Toggle(isOn: $userConfig.japaneseFont) {
+                VStack(alignment: .leading) {
+                    Text("Japanese Font")
+
+                    Text("Japanese font will replaces system font when showing subtitles.")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                }
+            }
+            .hanaSettingsRow()
+
             Toggle(isOn: $userConfig.nativeSubtitleRendering) {
                 VStack(alignment: .leading) {
                     Text("Native Subtitle Rendering")

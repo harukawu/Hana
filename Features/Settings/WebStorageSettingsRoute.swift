@@ -25,7 +25,7 @@ enum WebStorageSettingsRoute: CaseIterable, View {
 
 
 struct WebDAVSettingsView: View {
-    @State var userConfig = PersistedUserConfig.shared
+    @Environment(UserConfig.self) var userConfig
     
     @State var webDavName: String = ""
     @State var webDavPath: String = ""

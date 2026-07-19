@@ -16,7 +16,7 @@ struct HanaApp: App {
     @UIApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
     @Environment(\.scenePhase) private var scenePhase
     
-    let userConfig = PersistedUserConfig.shared
+    let userConfig = UserConfig.shared
     
     init() {
         prepareURLs()
@@ -30,7 +30,10 @@ struct HanaApp: App {
                 .environment(userConfig)
                 .interfaceOrientation(.portrait)
                 .modelContainer(for: VideoHistory.self)
-                .task { try? clearHistories() }
+                .task {
+                    try? clearHistories()
+                    try? await resolveMismatchedURLs()
+                }
         }
     }
 }
@@ -64,6 +67,37 @@ extension HanaApp {
         let hitories = try context.fetch(descriptor)
         hitories.forEach { history in
             context.delete(history)
+        }
+        try context.save()
+    }
+    
+    func resolveMismatchedURLs() async throws {
+        let container = try ModelContainer(for: VideoHistory.self)
+        let context = container.mainContext
+        let predicate = #Predicate<VideoHistory> { _ in true }
+        let descriptor = FetchDescriptor(predicate: predicate)
+        let hitories = try context.fetch(descriptor)
+        let historyDict = Dictionary(zip(hitories.map(\.id), hitories), uniquingKeysWith: { old, new in new })
+        let bookmarkDict = Dictionary(zip(hitories.map(\.id), hitories.map(\.urlBookmark)), uniquingKeysWith: { old, new in new })
+        await withTaskGroup(of: (UUID, URL)?.self) { group in
+            for (id, bookmark) in bookmarkDict {
+                group.addTask {
+                    var isStale = false
+                    guard let resolvedURL = try? URL(resolvingBookmarkData: bookmark, bookmarkDataIsStale: &isStale),
+                          !isStale else {
+                        return nil
+                    }
+                    return (id, resolvedURL)
+                }
+            }
+            for await result in group {
+                guard let result else { return }
+                let (id, newURL) = result
+                guard let currentHistory = historyDict[id] else { return }
+                if newURL != currentHistory.url {
+                    currentHistory.url = newURL
+                }
+            }
         }
         try context.save()
     }

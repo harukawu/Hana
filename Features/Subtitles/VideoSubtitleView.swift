@@ -17,7 +17,8 @@ struct VideoSubtitleView: View {
     let selectedAudioTrackIndex: Int?
     let onLookupVisibilityChanged: ((Bool) -> Void)?
     private let onMiningStart: (@MainActor () -> Void)?
-    
+
+    @Environment(UserConfig.self) private var userConfig
     @State private var lookupRequest: SubtitleLookupRequest?
     @State private var highlightRange: NSRange?
     @State private var isLookupVisible = false
@@ -195,8 +196,8 @@ extension VideoSubtitleView {
     func getVideoResources() async throws -> (imageURL: URL, audioURL: URL, videoTitle: String, sentence: String?)? {
         var (imageOptions, audioOptions, currentCue, subtitleDelay, videoTitle) = await MainActor.run {
             (
-                PersistedUserConfig.shared.imageOptions,
-                PersistedUserConfig.shared.audioOptions,
+                self.userConfig.imageOptions,
+                self.userConfig.audioOptions,
                 self.subtitles[cueIndex],
                 self.subtitleDelay,
                 self.videoTitle
@@ -231,6 +232,8 @@ struct VideoSubtitleText: UIViewRepresentable {
     let onCharacterTap: ((TappableLabelCharacterHit, String) -> Void)?
     let recognizerName: String?
     
+    @Environment(UserConfig.self) private var userConfig
+
     func makeUIView(context: Context) -> UITappableLabel {
         let label = UITappableLabel(onCharacterTap: onCharacterTap, recognizerName: recognizerName)
         label.textColor = .white
@@ -238,6 +241,9 @@ struct VideoSubtitleText: UIViewRepresentable {
         label.numberOfLines = 0
         label.textAlignment = .center
         label.lineBreakMode = .byCharWrapping
+        if userConfig.japaneseFont {
+            label.traitOverrides.typesettingLanguage = .init(languageCode: .japanese)
+        }
         return label
     }
     

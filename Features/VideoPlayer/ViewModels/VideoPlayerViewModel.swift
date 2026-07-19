@@ -9,9 +9,9 @@ import Foundation
 import SwiftUI
 import SwiftData
 import SwiftVLC
+import MediaPlayer
 import NaturalLanguage
 import OSLog
-
 
 struct PlaybackSession: Equatable {
     var itemID: UUID
@@ -22,11 +22,13 @@ struct PlaybackSession: Equatable {
 @MainActor
 final class VideoPlayerViewModel {
     var item: VideoItem
+    let userConfig: UserConfig
     var playbackSession: PlaybackSession
     let player: Player
     let hudModel: VideoPlayerHUDModel
     let controlsVisibilityModel: VideoPlayerControlsVisibilityModel
-    let userConfig = PersistedUserConfig.shared
+    let subtitleState: SubtitleState
+    let systemMediaManager: SystemMediaManager
     
     var contentMode: VideoContentMode = .fit
     var playbackErrorMessage: String?
@@ -34,24 +36,88 @@ final class VideoPlayerViewModel {
     
     init(
         item: VideoItem,
+        userConfig: UserConfig,
         player: Player,
         hudModel: VideoPlayerHUDModel,
-        controlsVisibilityModel: VideoPlayerControlsVisibilityModel
+        controlsVisibilityModel: VideoPlayerControlsVisibilityModel,
+        subtitleState: SubtitleState
     ) {
         self.item = item
+        self.userConfig = userConfig
         self.playbackSession = .init(itemID: item.id)
         self.player = player
         self.hudModel = hudModel
         self.controlsVisibilityModel = controlsVisibilityModel
+        self.systemMediaManager = SystemMediaManager()
+        self.subtitleState = subtitleState
+        subtitleState.postInit(
+            nativeSubtitleRendering: userConfig.nativeSubtitleRendering,
+            setSubtitleTrack: { [weak self] trackIndex in
+                guard let self else { return }
+                if let trackIndex,
+                   trackIndex < self.player.subtitleTracks.count {
+                    self.player.selectedSubtitleTrack = self.player.subtitleTracks[trackIndex]
+                } else {
+                    self.player.selectedSubtitleTrack = nil
+                }
+            },
+            addPlayerSubtitleTrack: { [weak self] subtitleURL in
+                try self?.player.addExternalTrack(
+                    from: subtitleURL,
+                    type: .subtitle,
+                    select: false
+                )
+            },
+            onSubtitlesChange: { [weak self] in
+                self?.resetCueCache()
+            }
+        )
+        systemMediaManager.postInit(
+            onPause: { [weak self] in
+                self?.pausePlayback()
+            },
+            onPlay: { [weak self] in
+                self?.resumePlayback()
+            },
+            onToggle: { [weak self] in
+                self?.togglePlayPause()
+            },
+            onPreviousTrack: { [weak self] in
+                // known issue: this may be invoked before queue is fully loaded
+                guard let self else { return }
+                self.playPreviousVideo(before: self.item.url)
+            },
+            onNextTrack: { [weak self] in
+                // known issue: this may be invoked before queue is fully loaded
+                guard let self else { return }
+                self.playNextVideo(after: self.item.url)
+            },
+            getPlaybackInfo: { [weak self] in
+                guard let self else { return nil }
+                return PlaybackInfo(
+                    title: self.item.displayTitle,
+                    albumTitle: self.item.url.deletingLastPathComponent().lastPathComponent,
+                    url: self.item.url,
+                    currentTime: self.player.currentTime.toSeconds(),
+                    position: self.player.position,
+                    isPlaying: self.player.isPlaying,
+                    rate: self.player.rate,
+                    queueCount: itemsFromSameDirectories.count,
+                    queueIndex: itemsFromSameDirectories.firstIndex(of: self.item),
+                    duration: self.player.duration?.toSeconds()
+                )
+            }
+        )
     }
-    
     // MARK: - Video Playere Core
     
     func startPlayback() {
         player.aspectRatio = contentMode.aspectRatio
         
         do {
-            try player.play(url: item.url)
+            let media = try Media(url: item.url)
+            media.addOption(":no-sub-autodetect-file")
+            try player.play(media)
             playbackErrorMessage = nil
         } catch {
             playbackErrorMessage = error.localizedDescription
@@ -67,6 +133,16 @@ final class VideoPlayerViewModel {
             player.togglePlayPause()
             playbackErrorMessage = nil
         }
+    }
+    
+    func pausePlayback() {
+        player.pause()
+        playbackErrorMessage = nil
+    }
+
+    func resumePlayback() {
+        player.resume()
+        playbackErrorMessage = nil
     }
     
     func seek(by offset: Duration) {
@@ -143,22 +219,20 @@ final class VideoPlayerViewModel {
     
     /// This is to prevent the case where `currentCueIndex` catch the index of the stale `nativeSubtitles`
     func resetSubtitleRuntimeStateForPlaybackSession() {
-        selectedSubtitleTrackIndex = nil
-        nativeSubtitles = []
-        externalSubtitleData = []
+        subtitleState.reset()
         setSubtitleDelay(.zero, showHUD: false)
     }
     
     var currentCueIndex: Int? {
-        guard let selectedSubtitleIndex = selectedSubtitleTrackIndex,
-              selectedSubtitleIndex < nativeSubtitles.count else {
+        guard let selectedSubtitleIndex = subtitleState.selectedSubtitleTrackIndex,
+              selectedSubtitleIndex < subtitleState.nativeSubtitles.count else {
             return nil
         }
         if let lastKnownCueRange,
            lastKnownCueRange.0 + subtitleDelay <= player.currentTime && lastKnownCueRange.1 + subtitleDelay > player.currentTime {
             return lastKnownCueIndex
         } else {
-            let subtitles = nativeSubtitles[selectedSubtitleIndex]
+            let subtitles = subtitleState.nativeSubtitles[selectedSubtitleIndex]
             let currentCueIndex = subtitles.firstIndex { subtitle in
                 subtitle.startTime + subtitleDelay <= player.currentTime && subtitle.endTime + subtitleDelay > player.currentTime
             }
@@ -172,21 +246,21 @@ final class VideoPlayerViewModel {
     }
     
     var lastCueInfo: (Int, SubtitleCue)? {
-        guard let selectedSubtitleIndex = selectedSubtitleTrackIndex,
-              selectedSubtitleIndex < nativeSubtitles.count,
-              let lastSubtitleIndex = nativeSubtitles[selectedSubtitleIndex].lastIndex(where: { $0.endTime + subtitleDelay < player.currentTime }) else {
+        guard let selectedSubtitleIndex = subtitleState.selectedSubtitleTrackIndex,
+              selectedSubtitleIndex < subtitleState.nativeSubtitles.count,
+              let lastSubtitleIndex = subtitleState.nativeSubtitles[selectedSubtitleIndex].lastIndex(where: { $0.endTime + subtitleDelay < player.currentTime }) else {
             return nil
         }
-        return (lastSubtitleIndex, nativeSubtitles[selectedSubtitleIndex][lastSubtitleIndex])
+        return (lastSubtitleIndex, subtitleState.nativeSubtitles[selectedSubtitleIndex][lastSubtitleIndex])
     }
     
     var nextCueInfo: (Int, SubtitleCue)? {
-        guard let selectedSubtitleIndex = selectedSubtitleTrackIndex,
-              selectedSubtitleIndex < nativeSubtitles.count,
-              let nextSubtitleIndex = nativeSubtitles[selectedSubtitleIndex].firstIndex(where: { $0.startTime + subtitleDelay > player.currentTime }) else {
+        guard let selectedSubtitleIndex = subtitleState.selectedSubtitleTrackIndex,
+              selectedSubtitleIndex < subtitleState.nativeSubtitles.count,
+              let nextSubtitleIndex = subtitleState.nativeSubtitles[selectedSubtitleIndex].firstIndex(where: { $0.startTime + subtitleDelay > player.currentTime }) else {
             return nil
         }
-        return (nextSubtitleIndex, nativeSubtitles[selectedSubtitleIndex][nextSubtitleIndex])
+        return (nextSubtitleIndex, subtitleState.nativeSubtitles[selectedSubtitleIndex][nextSubtitleIndex])
     }
     
     func showNextSubtitleNow() {
@@ -202,138 +276,31 @@ final class VideoPlayerViewModel {
     // MARK: - subtitle selection and visibility
     var showExternalSubtitleImporter = false
     var showJimakuSearchView = false
-    var hiddenSubtitleTrackIndex: Int? = nil
-    var selectedSubtitleTrackIndex: Int? = nil {
-        didSet {
-            resetCueCache()
-            if !PersistedUserConfig.shared.nativeSubtitleRendering {
-                if let selectedSubtitleTrackIndex,
-                   selectedSubtitleTrackIndex < player.subtitleTracks.count {
-                    player.selectedSubtitleTrack = player.subtitleTracks[selectedSubtitleTrackIndex]
-                } else {
-                    player.selectedSubtitleTrack = nil
-                }
-            } else {
-                player.selectedSubtitleTrack = nil
-            }
-            hiddenSubtitleTrackIndex = nil
-        }
-    }
-    var nativeSubtitles: [[SubtitleCue]] = []
-    var externalSubtitleData: [Data] = []
     
-    /// These function has two phase: first use FFmpeg to extract subtitles.
-    /// then restore persisted subtitles from SwiftData
-    @concurrent
-    private func extractNativeSubtitles(from videoURL: URL) async throws {
-        let japaneseOnly = await PersistedUserConfig.shared.japaneseOnly
-        let parser = SubtitleParser()
-        var extractedSubtitles = try parser.extractEmbeddedSubtitles(from: videoURL)
-        if japaneseOnly {
-            extractedSubtitles = extractedSubtitles.map({ subtitles in
-                subtitles.filter({ Self.isJapanese(text: $0.text) })
-            })
-        }
-        await MainActor.run {
-            self.nativeSubtitles = extractedSubtitles
-        }
-    }
-    
-    private func restorePersistedSubtitles() async {
-        // clear runtime state from last session
-        externalSubtitleData = []
-        // this is also needed to clear because the first time the video is played, `item.subtitleStorage.selectedIndex == 0` 
-        setSubtitleDelay(.zero, showHUD: false)
-        for singleSubtitleData in item.subtitleStorage.subtitleData {
-            do {
-                let tmpURL = FileStorage.getTempDirectory().appending(path: UUID().uuidString)
-                try singleSubtitleData.write(to: tmpURL)
-                await handleSubtitleImportResult(.success(tmpURL), securityScoped: false, persist: false)
-                externalSubtitleData.append(singleSubtitleData)
-            } catch {
-                Logger.video.error("Failed to load persisted subtitle: \(error)")
-                continue
-            }
-        }
-        if let subtitleIndex = item.subtitleStorage.selectedIndex,
-           subtitleIndex < nativeSubtitles.count {
-            self.selectedSubtitleTrackIndex = subtitleIndex
-            self.setSubtitleDelay(item.subtitleStorage.subtitleDelay, showHUD: false)
-        }
-    }
-    
-    /// - Parameters:
-    ///     - securityScoped: get access
-    ///     - persist: persist to SwiftData
-    @concurrent
-    func handleSubtitleImportResult(
+    func importSubtitle(
         _ result: Result<URL, any Error>,
         securityScoped: Bool = true,
+        expectedSession: PlaybackSession,
         persist: Bool = true
     ) async {
-        switch result {
-        case .success(let url):
-            if securityScoped {
-                guard url.startAccessingSecurityScopedResource() else {
-                    Logger.video.error("Failed to access external subtitle file \(url)")
-                    return
-                }
-            }
-            defer { url.stopAccessingSecurityScopedResource() }
-            // libVLC import file asynchronously. Therefore we should copy to a place where we have access
-            let targetURL: URL
-            do {
-                let tempDir = FileStorage.getTempDirectory()
-                let fileName = UUID().uuidString.appending(".\(url.pathExtension)")
-                targetURL = tempDir.appending(path: fileName)
-                try FileManager.default.copyItem(at: url, to: targetURL)
-            } catch {
-                Logger.video.error("Failed to copy external subtitle to cache directory: \(error)")
-                return
-            }
-            do {
-                try await player.addExternalTrack(from: targetURL, type: .subtitle, select: false)
-                let japaneseOnly = await PersistedUserConfig.shared.japaneseOnly
-                let parser = SubtitleParser()
-                var subtitleCues: [SubtitleCue]
-                do {
-                    subtitleCues = try parser.parse(targetURL)
-                    if japaneseOnly {
-                        subtitleCues = subtitleCues.filter({ Self.isJapanese(text: $0.text) })
-                    }
-                } catch {
-                    Logger.video.error("Failed to parse external subtitle by FFmpeg: \(error)")
-                    return
-                }
-                await MainActor.run {
-                    self.nativeSubtitles.append(subtitleCues)
-                    self.selectedSubtitleTrackIndex = self.nativeSubtitles.lastIndex(where: { _ in true })
-                }
-                if persist {
-                    do {
-                        let subtitleData = try Data(contentsOf: targetURL)
-                        await MainActor.run {
-                            self.externalSubtitleData.append(subtitleData)
-                        }
-                    } catch {
-                        Logger.video.error("Failed to load subtitle to data")
-                    }
-                }
-            } catch {
-                Logger.video.error("Failed to add external subtitle file \(url): \(error)")
-            }
-        case .failure(let error):
-            Logger.video.error("Failed to import external subtitle file: \(error)")
+        do {
+            let preparedSubtitle = try await subtitleState.prepareSubtitle(
+                from: result,
+                japaneseOnly: userConfig.japaneseOnly,
+                securityScoped: securityScoped,
+            )
+            try Task.checkCancellation()
+            guard playbackSession == expectedSession else { return }
+            try subtitleState.importPreparedSubtitle(preparedSubtitle, persist: persist)
+        } catch is CancellationError {
             return
+        } catch {
+            if case let .success(url) = result {
+                Logger.video.error("Failed to import subtitle at \(url): \(error)")
+            } else {
+                Logger.video.error("Failed to import subtitle: \(error)")
+            }
         }
-    }
-    
-    static nonisolated func isJapanese(text: String?) -> Bool {
-        guard let text else {
-            return false
-        }
-        let dominantLanguage = NLLanguageRecognizer.dominantLanguage(for: text)
-        return dominantLanguage == .japanese
     }
     
     // MARK: - Bookmark
@@ -431,25 +398,25 @@ final class VideoPlayerViewModel {
     }
     
     func handleThreeFingersTap() {
-        guard let selectedSubtitleTrackIndex = selectedSubtitleTrackIndex else { return }
-        if hiddenSubtitleTrackIndex == nil {
+        guard let selectedSubtitleTrackIndex = subtitleState.selectedSubtitleTrackIndex else { return }
+        if subtitleState.hiddenSubtitleTrackIndex == nil {
             if !userConfig.nativeSubtitleRendering {
                 // This bypasses the `didSet` of `viewModel.selectedSubtitleTrackIndex`
                 player.selectedSubtitleTrack = nil
             }
-            hiddenSubtitleTrackIndex = selectedSubtitleTrackIndex
+            subtitleState.hiddenSubtitleTrackIndex = selectedSubtitleTrackIndex
             hudModel.showSubtitleHidden(true)
         } else {
             if !userConfig.nativeSubtitleRendering {
-                player.selectedSubtitleTrack = player.subtitleTracks[hiddenSubtitleTrackIndex!]
+                player.selectedSubtitleTrack = player.subtitleTracks[subtitleState.hiddenSubtitleTrackIndex!]
             }
-            hiddenSubtitleTrackIndex = nil
+            subtitleState.hiddenSubtitleTrackIndex = nil
             hudModel.showSubtitleHidden(false)
         }
     }
     
     func handleRightSwipe() {
-        guard selectedSubtitleTrackIndex != nil , !nativeSubtitles.isEmpty else { return }
+        guard subtitleState.selectedSubtitleTrackIndex != nil , !subtitleState.nativeSubtitles.isEmpty else { return }
         showSubtitlesFullscreenView.toggle()
     }
     
@@ -474,7 +441,48 @@ final class VideoPlayerViewModel {
         hudModel.showBookmarkAdded(at: bookmark.time)
     }
     
-    // MARK: - on start playing
+    // MARK: - Playback Lifetime
+
+    func runPlaybackSession(modelContext: ModelContext) async {
+        let expectedSession = playbackSession
+        let expectedItemURL = item.url
+        let endEvents = player.events(
+            policy: .unbounded,
+            filter: { event in
+                if case .endReached = event {
+                    return true
+                }
+                return false
+            }
+        )
+        
+        // avoid non sendable `modelContext` to be sent to task isolation domain in `async let`
+        let playbackOperation: @MainActor @Sendable () async -> Void = { [self] in
+            await onPlaybackSessionChanged(modelContext: modelContext)
+        }
+        let queueOperation: @MainActor @Sendable () async -> Void = { [self] in
+            await loadItemsFromSameDirectories(modelContext: modelContext)
+        }
+
+        async let playbackSetup: Void = playbackOperation()
+        async let queueLoad: Void = queueOperation()
+
+        for await _ in endEvents {
+            await queueLoad
+            guard userConfig.autoplayNextVideo,
+                  !Task.isCancelled,
+                  playbackSession == expectedSession,
+                  item.url == expectedItemURL else {
+                break
+            }
+            playNextVideo(after: expectedItemURL)
+            break
+        }
+
+        await playbackSetup
+        await queueLoad
+    }
+    
     func runAfterPlayStart(_ body: () async -> Void) async {
         for await event in player.events {
             if case let .stateChanged(playerState) = event,
@@ -485,36 +493,94 @@ final class VideoPlayerViewModel {
         }
     }
     
-    func prepareSubtitleTrackAfterPlayStart() async {
-        await runAfterPlayStart {
-            selectedSubtitleTrackIndex = !player.subtitleTracks.isEmpty ? 0 : nil
-            let url = item.url
-            do {
-                try await extractNativeSubtitles(from: url)
-            } catch {
-                Logger.video.error("Failed to extract subtitles from video file \(url): \(error)")
-                await MainActor.run {
-                    self.nativeSubtitles = []
-                }
-                return
+    /// invoked when playback session is changed
+    ///
+    /// There are multiple reasons to cause playback session change:
+    /// 1. select different item in PWD queue
+    /// 2. return from background
+    func onPlaybackSessionChanged(
+        modelContext: ModelContext
+    ) async {
+        let sessionSnapshot = playbackSession
+        let itemSnapshot = item
+        
+        if !isSuspendedForBackground {
+            if let persistenceTask = persistenceTasks[item.url] {
+                await persistenceTask.value
             }
-            await restorePersistedSubtitles()
+            // task is not immediately cancelled after `playbackSession` is changed because cancellation is managed by SwiftUI
+            guard !Task.isCancelled, playbackSession == sessionSnapshot, item.id == itemSnapshot.id else { return }
+            startPlayback()
+        }
+        
+        await runAfterPlayStart {
+            guard !Task.isCancelled, playbackSession == sessionSnapshot, item.id == itemSnapshot.id else { return }
+            
+            if isSuspendedForBackground {
+                playbackSnapshotBeforeSuspended = nil
+                isSuspendedForBackground = false
+            }
+            
+            restorePlaybackDataFromHistory()
+            subtitleState.reset()
+            subtitleState.selectedSubtitleTrackIndex = !player.subtitleTracks.isEmpty ? 0 : nil
+            
+            do {
+                let japaneseOnly = userConfig.japaneseOnly
+                async let embeddedSubtitles = subtitleState.extractEmbeddedSubtitles(from: item.url, japaneseOnly: userConfig.japaneseOnly)
+                async let persistedSubtitles = subtitleState.restorePersistedSubtitles(
+                    from: item,
+                    japaneseOnly: japaneseOnly
+                )
+                
+                var subtitlesInPWD = [PreparedExternalSubtitle]()
+                let (embeddedSubtitlesValue, persistedSubtitlesValue) = try await (embeddedSubtitles, persistedSubtitles)
+                if subtitleState.shouldLoadSubtitlesInPWD(from: item, modelContext: modelContext) {
+                    do {
+                        subtitlesInPWD = try await subtitleState.prepareSubtitlesInPWD(
+                            videoURL: item.url,
+                            japaneseOnly: japaneseOnly,
+                        )
+                    } catch {
+                        Logger.video.error("Failed to parse subtitles of \(self.item.url) in PWD: \(error)")
+                    }
+                }
+                
+                // task is not immediately cancelled after `playbackSession` is changed because cancellation is managed by SwiftUI
+                try Task.checkCancellation()
+                guard playbackSession == sessionSnapshot, item.id == itemSnapshot.id else { return }
+                
+                subtitleState.nativeSubtitles = embeddedSubtitlesValue
+                try persistedSubtitlesValue.forEach { persistedSubtitle in
+                    try self.subtitleState.importPreparedSubtitle(persistedSubtitle)
+                }
+                try subtitlesInPWD.forEach { subtitleInPWD in
+                    try self.subtitleState.importPreparedSubtitle(subtitleInPWD)
+                }
+                if let selectedSubtitleIndex = item.subtitleStorage.selectedIndex
+                    , selectedSubtitleIndex < subtitleState.nativeSubtitles.count {
+                    subtitleState.selectedSubtitleTrackIndex = selectedSubtitleIndex
+                }
+                setSubtitleDelay(item.subtitleStorage.subtitleDelay, showHUD: false)
+            } catch is CancellationError {
+                return
+            } catch {
+                Logger.video.error("Failed to load subtitles: \(error)")
+            }
         }
     }
     
-    func restorePlaybackDataFromHistory() async {
-        await runAfterPlayStart {
-            let time = item.time
-            if time != .zero {
-                seek(to: time)
-            }
-            if let audioTrackIndex = item.selectedAudioTrackIndex,
-               audioTrackIndex < player.audioTracks.count {
-                player.selectedAudioTrack = player.audioTracks[audioTrackIndex]
-            }
-            setPlaybackRate(item.playbackRate)
-            bookmarks = item.bookmarks
+    private func restorePlaybackDataFromHistory() {
+        let time = item.time
+        if time != .zero {
+            seek(to: time)
         }
+        if let audioTrackIndex = item.selectedAudioTrackIndex,
+           audioTrackIndex < player.audioTracks.count {
+            player.selectedAudioTrack = player.audioTracks[audioTrackIndex]
+        }
+        setPlaybackRate(item.playbackRate)
+        bookmarks = item.bookmarks
     }
     
     func runAfterPlaybackStop(_ body: () async -> Void) async {
@@ -525,6 +591,12 @@ final class VideoPlayerViewModel {
                 break
             }
         }
+    }
+    
+    func onPlayerViewDisappear(modelContext: ModelContext) {
+        persistVideoItem(item, modelContext: modelContext)
+        stopPlayback()
+        systemMediaManager.deactivate()
     }
     
     // MARK: - Scene Phase
@@ -567,17 +639,16 @@ final class VideoPlayerViewModel {
     func onScenePhaseChange(from oldValue: ScenePhase, to newValue: ScenePhase, modelContext: ModelContext) {
         Task {
             if newValue == .background {
-                if player.isPlaying {
-                    togglePlayPause()
-                }
+                pausePlayback()
+                systemMediaManager.deactivate()
                 // When scene phase moves to background, states inside `player` can be lost. Record before stop playing
                 playbackSnapshotBeforeSuspended = item.getSnapshot(
                     time: player.currentTime,
                     position: player.position,
                     bookmarks: bookmarks,
                     subtitleStorage: VideoSubtitleStorage(
-                        subtitleData: externalSubtitleData,
-                        selectedIndex: selectedSubtitleTrackIndex,
+                        subtitleData: subtitleState.externalSubtitleData,
+                        selectedIndex: subtitleState.selectedSubtitleTrackIndex,
                         subtitleDelay: subtitleDelay
                     ),
                     selectedAudioTrackIndex: selectedAudioTrackIndex,
@@ -590,6 +661,7 @@ final class VideoPlayerViewModel {
                 // when users come back from background, the persisting job may be not ended
                 // if we read from SwiftData (instead of memory), we may read an outdated state. Another solution is to await the persisting task
                 //            item = .getVideoItem(from: item.url, modelContext: modelContext)
+                systemMediaManager.activate()
                 if let playbackSnapshotBeforeSuspended {
                     if !isAnkiMining {
                         // avoid users see black screen
@@ -624,8 +696,8 @@ final class VideoPlayerViewModel {
         let playbackRate = player.rate
         let bookmarks = bookmarks
         let subtitleStorage = VideoSubtitleStorage(
-            subtitleData: externalSubtitleData,
-            selectedIndex: selectedSubtitleTrackIndex,
+            subtitleData: subtitleState.externalSubtitleData,
+            selectedIndex: subtitleState.selectedSubtitleTrackIndex,
             subtitleDelay: subtitleDelay
         )
         persistenceTasks[item.url] = Task {
@@ -691,13 +763,25 @@ final class VideoPlayerViewModel {
     var itemsFromSameDirectories: [VideoItem] = []
     
     func loadItemsFromSameDirectories(modelContext: ModelContext) async {
-        itemsFromSameDirectories = []
         let itemURL = item.url
         let dirURL = itemURL.deletingLastPathComponent()
-        guard let contents = try? FileManager.default.contentsOfDirectory(at: dirURL, includingPropertiesForKeys: nil) else {
+        guard let contents = try? FileManager.default.contentsOfDirectory(
+            at: dirURL,
+            includingPropertiesForKeys: nil,
+            options: [.skipsHiddenFiles]
+        ) else {
             return
         }
-        let files = contents.filter({ !$0.isDirectory() })
+        let standardizedItemURL = itemURL.standardizedFileURL
+        var files = contents.filter { file in
+            guard !file.isDirectory() else { return false }
+            return file.standardizedFileURL == standardizedItemURL
+                || VideoFileSupport.isVideoCandidate(file)
+        }
+        // Keep an already-opened video in its own queue even if its extension is unknown or it is hidden.
+        if !files.contains(where: { $0.standardizedFileURL == standardizedItemURL }) {
+            files.append(itemURL)
+        }
         var items = [VideoItem]()
         for file in files {
             if let task = persistenceTasks[file] {
@@ -713,6 +797,44 @@ final class VideoPlayerViewModel {
         // Current task can be cancelled by SwiftUI runtime when item is changed
         guard !Task.isCancelled, item.url == itemURL else { return }
         itemsFromSameDirectories = items
+    }
+    
+    private func playPreviousVideo(before currentURL: URL) {
+        // Video items created before their first history persistence have different IDs, so match by URL.
+        let standardizedCurrentURL = currentURL.standardizedFileURL
+        guard let currentIndex = itemsFromSameDirectories.firstIndex(where: {
+            $0.url.standardizedFileURL == standardizedCurrentURL
+        }) else {
+            return
+        }
+        let previousIndex = currentIndex - 1
+        guard previousIndex >= 0 else { return }
+        item = itemsFromSameDirectories[previousIndex]
+        hudModel.showPreviousVideo()
+    }
+    
+    private func playNextVideo(after currentURL: URL) {
+        // Video items created before their first history persistence have different IDs, so match by URL.
+        let standardizedCurrentURL = currentURL.standardizedFileURL
+        guard let currentIndex = itemsFromSameDirectories.firstIndex(where: {
+            $0.url.standardizedFileURL == standardizedCurrentURL
+        }) else {
+            return
+        }
+        let nextIndex = currentIndex + 1
+        guard nextIndex < itemsFromSameDirectories.count else { return }
+        item = itemsFromSameDirectories[nextIndex]
+        hudModel.showNextVideo()
+    }
+    
+    // MARK: - System Media Manager
+    
+    func activateSystemMediaManager() {
+        systemMediaManager.activate()
+    }
+    
+    func refreshNowPlayingInfo(currentTime: Duration, force: Bool = false) {
+        systemMediaManager.refreshNowPlayingInfo(currentTime: currentTime, force: force)
     }
 }
 

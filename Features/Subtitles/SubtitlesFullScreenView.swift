@@ -20,6 +20,7 @@ struct SubtitlesFullScreenView: View {
     @State private var selectedCueIndices: Set<Int>
     @State private var lookupRequest: SubtitleLookupRequest?
     @State private var showNoSelectionAlert = false
+    @Environment(UserConfig.self) private var userConfig
     @Environment(\.dismiss) private var dismiss
     
     init(
@@ -152,8 +153,8 @@ struct SubtitlesFullScreenView: View {
         let sentences = Array(sortedIndices.first!...sortedIndices.last!).map({ cues[$0].text })
         var (imageOptions, audioOptions, videoTitle) = await MainActor.run {
             (
-                PersistedUserConfig.shared.imageOptions,
-                PersistedUserConfig.shared.audioOptions,
+                self.userConfig.imageOptions,
+                self.userConfig.audioOptions,
                 self.videoTitle
             )
         }

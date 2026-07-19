@@ -90,7 +90,7 @@ Hana includes several media, dictionary, and app-support libraries. The in-app A
 
 | Name | Description | License |
 | --- | --- | --- |
-| [PersistedObservation](https://github.com/harukawu/PersistedObservation) | Swift macro package written for Hana. | MIT |
+| [ObservableDefaults](https://github.com/fatbobman/ObservableDefaults) | UserDefaults-backed Observation support for app settings. | MIT |
 | [MarqueeText](https://github.com/harflabs/MarqueeText) | Scrolling text used by the file browser UI. | MIT |
 | [SWXMLHash](https://github.com/drmohundro/SWXMLHash) | XML parsing used by WebDAV support. | MIT |
 
@@ -119,7 +119,7 @@ Hana uses the dictionary portion of a SwiftPM package fork of [Manhhao/Hoshi-Rea
 
 | Name | Description | License |
 | --- | --- | --- |
-| [SwiftSyntax](https://github.com/swiftlang/swift-syntax) | Used by the PersistedObservation macro implementation. | Apache-2.0 |
+| [SwiftSyntax](https://github.com/swiftlang/swift-syntax) | Used by the ObservableDefaults macro implementation. | Apache-2.0 |
 | [Swift Argument Parser](https://github.com/apple/swift-argument-parser) | Resolved by FFmpeg-iOS for its command-line tool target. | Apache-2.0 |
 
 ## Attribution

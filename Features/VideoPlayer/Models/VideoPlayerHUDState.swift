@@ -19,6 +19,8 @@ enum VideoPlayerHUDState: Equatable, Sendable {
     case volume(Float)
     case seekBackward(seconds: Int?) // nil indicates seek backward to the last subtitle
     case seekForward(seconds: Int?)
+    case previousVideo
+    case nextVideo
     case subtitleDelay(milliseconds: Int)
     case subtitleHidden(Bool)
     case play
@@ -36,6 +38,10 @@ enum VideoPlayerHUDState: Equatable, Sendable {
             seconds == nil ? "gobackward" : "gobackward.10"
         case .seekForward(let seconds):
             seconds == nil ? "goforward" : "goforward.10"
+        case .previousVideo:
+            "backward.end.fill"
+        case .nextVideo:
+            "forward.end.fill"
         case .subtitleDelay:
             "captions.bubble"
         case .subtitleHidden(let isHidden):
@@ -59,6 +65,10 @@ enum VideoPlayerHUDState: Equatable, Sendable {
             seconds == nil ? "Forward" : "+\(seconds!)s"
         case .subtitleDelay(milliseconds: let milliseconds):
             "\(milliseconds)ms"
+        case .previousVideo:
+            "Previous Video"
+        case .nextVideo:
+            "Next Video"
         case .subtitleHidden(let isHidden):
             isHidden ? "Subtitles Hidden" : "Subtitles Visible"
         case .play:
@@ -76,7 +86,7 @@ enum VideoPlayerHUDState: Equatable, Sendable {
         switch self {
         case .brightness(let value), .volume(let value):
             value
-        case .seekBackward, .seekForward, .play, .pause, .subtitleDelay, .subtitleHidden,
+        case .seekBackward, .seekForward, .previousVideo, .nextVideo, .play, .pause, .subtitleDelay, .subtitleHidden,
                 .bookmarkAdded, .bookmarkAlreadyExists:
             nil
         }

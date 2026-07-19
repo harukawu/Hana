@@ -33,7 +33,7 @@ struct JimakuSearchView: View {
     @State private var showAlert: Bool = false
     @State private var alertError: JimakuSearchViewError? = nil
     
-    @Environment(PersistedUserConfig.self) private var userConfig
+    @Environment(UserConfig.self) private var userConfig
     @Environment(\.dismiss) private var dismiss
     
     init(initialQuery: String?, onFileSelected: @escaping (URL) -> Void) {

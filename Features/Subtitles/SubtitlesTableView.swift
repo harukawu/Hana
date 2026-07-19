@@ -10,12 +10,19 @@ import SwiftUI
 
 struct SubtitlesTableView: UIViewControllerRepresentable {
     @Binding var selectedCueIndices: Set<Int>
+    @Environment(UserConfig.self) private var userConfig
     let subtitles: [SubtitleCue]
     let highlightedIndex: Int?
     let onTap: ((TappableLabelCharacterHit, String) -> Void)?
     
     func makeUIViewController(context: Context) -> UISubtitlesTableViewController {
-        return UISubtitlesTableViewController(subtitles: subtitles, selectedCueIndices: $selectedCueIndices, highlightedIndex: highlightedIndex, onTap: onTap)
+        UISubtitlesTableViewController(
+            japaneseFont: userConfig.japaneseFont,
+            subtitles: subtitles,
+            selectedCueIndices: $selectedCueIndices,
+            highlightedIndex: highlightedIndex,
+            onTap: onTap
+        )
     }
     
     func updateUIViewController(_ uiViewController: UISubtitlesTableViewController, context: Context) {}
@@ -32,13 +39,21 @@ final class UISubtitlesTableViewController: UIViewController {
     
     private let tableView = UITableView(frame: .zero, style: .plain)
     
+    private let japaneseFont: Bool
     private let subtitles: [SubtitleCue]
     @Binding var selectedCueIndices: Set<Int>
     private let highlightedIndex: Int?
     private let onTap: ((TappableLabelCharacterHit, String) -> Void)?
     private var hasPositionedHighlightedRow = false
     
-    init(subtitles: [SubtitleCue], selectedCueIndices: Binding<Set<Int>>, highlightedIndex: Int?, onTap: ((TappableLabelCharacterHit, String) -> Void)? = nil) {
+    init(
+        japaneseFont: Bool,
+        subtitles: [SubtitleCue],
+        selectedCueIndices: Binding<Set<Int>>,
+        highlightedIndex: Int?,
+        onTap: ((TappableLabelCharacterHit, String) -> Void)? = nil
+    ) {
+        self.japaneseFont = japaneseFont
         self.subtitles = subtitles
         self._selectedCueIndices = selectedCueIndices
         self.highlightedIndex = highlightedIndex
@@ -138,6 +153,9 @@ extension UISubtitlesTableViewController: UITableViewDataSource {
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: Self.reuseIdentifier, for: indexPath) as! UISubtitlesTableViewCell
+        if japaneseFont {
+            cell.traitOverrides.typesettingLanguage = .init(languageCode: .japanese)
+        }
         if let onTap {
             cell.setOnTap(onTap)
         }

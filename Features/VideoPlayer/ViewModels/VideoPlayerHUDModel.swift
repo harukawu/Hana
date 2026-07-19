@@ -35,6 +35,14 @@ final class VideoPlayerHUDModel {
         show(.volume(value))
     }
     
+    func showPreviousVideo() {
+        show(.previousVideo)
+    }
+    
+    func showNextVideo() {
+        show(.nextVideo)
+    }
+    
     func showSubtitleDelay(_ delay: Int) {
         show(.subtitleDelay(milliseconds: delay))
     }

@@ -26,3 +26,22 @@ extension View {
         modifier(ConditionalNavigationTitle(title: title, condition: condition))
     }
 }
+
+struct LightSchemePreference: ViewModifier {
+    let preferLightScheme: Bool?
+    
+    func body(content: Content) -> some View {
+        if let preferLightScheme {
+            content
+                .preferredColorScheme(preferLightScheme ? .light : .dark)
+        } else {
+            content
+        }
+    }
+}
+
+extension View {
+    func preferLightScheme(_ preference: Bool?) -> some View {
+        modifier(LightSchemePreference(preferLightScheme: preference))
+    }
+}

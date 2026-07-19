@@ -12,6 +12,7 @@ import AVKit
 
 struct VideoPlayerControls: View {
     let player: Player
+    @State var subtitleState: SubtitleState
     @Bindable var viewModel: VideoPlayerViewModel
     let bookmarks: [VideoPlayerBookmark]
     let dismiss: DismissAction
@@ -25,7 +26,7 @@ struct VideoPlayerControls: View {
     
     @State private var scrubPosition: Double?
     @State private var selectedBookmarkID: VideoPlayerBookmark.ID?
-    @Environment(PersistedUserConfig.self) private var userConfig
+    @Environment(UserConfig.self) private var userConfig
     
     private let playbackRates: [Float] = [0.25, 0.5, 0.75, 1.0, 1.25, 1.5, 1.75, 2.0]
     private let subtitleDelayStep = 100
@@ -348,16 +349,16 @@ struct VideoPlayerControls: View {
                     children: [
                         UIAction(
                             title: "Off",
-                            state: viewModel.selectedSubtitleTrackIndex == nil ? .on : .off
+                            state: subtitleState.selectedSubtitleTrackIndex == nil ? .on : .off
                         ) { _ in
-                            viewModel.selectedSubtitleTrackIndex = nil
+                            subtitleState.selectedSubtitleTrackIndex = nil
                         }
                     ] + player.subtitleTracks.enumerated().map { index, track in
                         UIAction(
                             title: track.name,
-                            state: viewModel.selectedSubtitleTrackIndex == index ? .on : .off
+                            state: subtitleState.selectedSubtitleTrackIndex == index ? .on : .off
                         ) { _ in
-                            viewModel.selectedSubtitleTrackIndex = index
+                            subtitleState.selectedSubtitleTrackIndex = index
                         }
                     }
                 )

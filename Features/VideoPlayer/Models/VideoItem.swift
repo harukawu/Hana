@@ -8,6 +8,36 @@
 import Foundation
 import SwiftData
 import OSLog
+import UniformTypeIdentifiers
+
+enum VideoFileSupport {
+    /// Common video containers supported by VLC. Playback remains the final validation.
+    static let knownVideoExtensions: Set<String> = [
+        "3g2", "3gp",
+        "avi",
+        "f4v", "flv",
+        "m2t", "m2ts", "mts", "ts",
+        "m4v", "mkv", "mov", "mp4",
+        "mpeg", "mpg",
+        "mxf",
+        "ogm", "ogv",
+        "rm", "rmvb",
+        "vob",
+        "webm", "wmv"
+    ]
+    
+    /// Performs only metadata-based checks so directory queue discovery stays inexpensive.
+    static func isVideoCandidate(_ url: URL) -> Bool {
+        let fileExtension = url.pathExtension.lowercased()
+        guard !fileExtension.isEmpty else { return false }
+        
+        if knownVideoExtensions.contains(fileExtension) {
+            return true
+        }
+        
+        return UTType(filenameExtension: fileExtension)?.conforms(to: .movie) == true
+    }
+}
 
 struct VideoItem: Identifiable, Hashable, Sendable {
     let id: UUID

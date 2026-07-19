@@ -6,14 +6,13 @@
 //
 
 import Foundation
-import PersistedObservation
+import ObservableDefaults
 
 @MainActor
-@PersistedObservable
+@ObservableDefaults
 class UserConfig {
     
     static let shared = UserConfig()
-    private init() {}
     
     // MARK: - Jimaku
     var jimakuURL: String = ""
@@ -22,14 +21,19 @@ class UserConfig {
     // MARK: - WebDAV
     var webDavSources: [WebDavSource] = []
     
+    // MARK: - Playback
+    var playbackTheme: Themes = .system
+    var autoplayNextVideo: Bool = true
+    
     // MARK: - Subtitles
     var nativeSubtitleRendering: Bool = true
+    var japaneseFont: Bool = true
     var japaneseOnly: Bool = false
     
     // MARK: - Mining
-    @PersistedObservationTracked(key: "ankiMiningImageOptions")
+    @DefaultsKey(userDefaultsKey: "ankiMiningImageOptions")
     var imageOptions: MediaExtractor.ImageOptions = .init()
     
-    @PersistedObservationTracked(key: "ankiMiningAudioOptions")
+    @DefaultsKey(userDefaultsKey: "ankiMiningAudioOptions")
     var audioOptions: MediaExtractor.AudioOptions = .init()
 }

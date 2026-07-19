@@ -1,5 +1,5 @@
 {
-  "originHash" : "5480e0c7b96d9661ca9fda4ce026e1fd77d9a8c00a19a922c26883ffcf18cfd3",
+  "originHash" : "0e5f9f33119ff8df2ee26f05424ece86407bba6a4d702c9b32faa7a745548d80",
   "pins" : [
     {
       "identity" : "aexml",
@@ -56,12 +56,12 @@
       }
     },
     {
-      "identity" : "persistedobservation",
+      "identity" : "observabledefaults",
       "kind" : "remoteSourceControl",
-      "location" : "https://github.com/harukawu/PersistedObservation",
+      "location" : "https://github.com/fatbobman/ObservableDefaults",
       "state" : {
-        "branch" : "main",
-        "revision" : "e3c6584336dd8163ea33d68466c068abfecde677"
+        "revision" : "5e2cca5f824afe6d08ee00ba064ff6608e110850",
+        "version" : "1.8.10"
       }
     },
     {
