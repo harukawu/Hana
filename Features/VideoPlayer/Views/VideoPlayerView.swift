@@ -241,12 +241,16 @@ extension VideoPlayerView {
         JimakuSearchView(initialQuery: viewModel.item.displayTitle) { jimakuFile in
             let session = viewModel.playbackSession
             Task {
-                let localURL = try await JimakuManager.downloadSubtitle(from: jimakuFile)
-                await viewModel.importSubtitle(
-                    .success(localURL),
-                    securityScoped: false,
-                    expectedSession: session
-                )
+                do {
+                    let localURL = try await JimakuManager.downloadSubtitle(from: jimakuFile)
+                    await viewModel.importSubtitle(
+                        .success(localURL),
+                        securityScoped: false,
+                        expectedSession: session
+                    )
+                } catch {
+                    hudModel.showSubtitleLoading(state: .failed)
+                }
             }
         }
         .onAppear {
