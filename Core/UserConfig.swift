@@ -17,6 +17,7 @@ class UserConfig {
     // MARK: - Jimaku
     var jimakuURL: String = ""
     var jimakuKey: String = ""
+    var loadJimakuByLLM: Bool = false
     
     // MARK: - WebDAV
     var webDavSources: [WebDavSource] = []

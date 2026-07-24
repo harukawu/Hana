@@ -14,6 +14,12 @@ enum VideoPlayerGestureZone: Sendable {
     case right
 }
 
+enum SubtitleLoadingState {
+    case loading
+    case loaded
+    case failed
+}
+
 enum VideoPlayerHUDState: Equatable, Sendable {
     case brightness(Float)
     case volume(Float)
@@ -21,6 +27,7 @@ enum VideoPlayerHUDState: Equatable, Sendable {
     case seekForward(seconds: Int?)
     case previousVideo
     case nextVideo
+    case loadSubtitle(SubtitleLoadingState)
     case subtitleDelay(milliseconds: Int)
     case subtitleHidden(Bool)
     case play
@@ -42,6 +49,15 @@ enum VideoPlayerHUDState: Equatable, Sendable {
             "backward.end.fill"
         case .nextVideo:
             "forward.end.fill"
+        case .loadSubtitle(let state):
+            switch state {
+            case .loading:
+                "ellipsis.circle.fill"
+            case .loaded:
+                "checkmark.circle.fill"
+            case .failed:
+                "exclamationmark.triangle.fill"
+            }
         case .subtitleDelay:
             "captions.bubble"
         case .subtitleHidden(let isHidden):
@@ -69,6 +85,15 @@ enum VideoPlayerHUDState: Equatable, Sendable {
             "Previous Video"
         case .nextVideo:
             "Next Video"
+        case .loadSubtitle(let state):
+            switch state {
+            case .loading:
+                "Loading Subtitles"
+            case .loaded:
+                "Subtitles Loaded"
+            case .failed:
+                "Failed to Load Subtitles"
+            }
         case .subtitleHidden(let isHidden):
             isHidden ? "Subtitles Hidden" : "Subtitles Visible"
         case .play:
@@ -86,8 +111,7 @@ enum VideoPlayerHUDState: Equatable, Sendable {
         switch self {
         case .brightness(let value), .volume(let value):
             value
-        case .seekBackward, .seekForward, .previousVideo, .nextVideo, .play, .pause, .subtitleDelay, .subtitleHidden,
-                .bookmarkAdded, .bookmarkAlreadyExists:
+        default:
             nil
         }
     }

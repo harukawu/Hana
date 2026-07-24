@@ -59,6 +59,10 @@ final class VideoPlayerHUDModel {
         show(.bookmarkAlreadyExists(time))
     }
     
+    func showSubtitleLoading(state: SubtitleLoadingState) {
+        show(.loadSubtitle(state))
+    }
+
     private func show(_ state: VideoPlayerHUDState) {
         hudState = state
         autoHideTask?.cancel()

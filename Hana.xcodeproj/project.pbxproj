@@ -39,6 +39,7 @@
 			membershipExceptions = (
 				FileStorage.swift,
 				JimakuManager.swift,
+				LLMJimakuLoader.swift,
 				MediaExtractor.swift,
 				SubtitleParser.swift,
 				UserConfig.swift,
@@ -87,6 +88,7 @@
 				VideoPlayer/Gestures/VideoPlayerGestureModifier.swift,
 				VideoPlayer/Gestures/VideoPlayerGestures.swift,
 				VideoPlayer/Jimaku/JimakuSearchView.swift,
+				VideoPlayer/Models/SubtitleCache.swift,
 				VideoPlayer/Models/VideoContentMode.swift,
 				VideoPlayer/Models/VideoItem.swift,
 				VideoPlayer/Models/VideoPlayerBookmark.swift,

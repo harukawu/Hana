@@ -68,9 +68,12 @@ class JimakuManager {
         return searchResult
     }
     
-    func getFilesList(of id: Int) async throws -> [JimakuSubtitleFile] {
+    func getFilesList(of id: Int, episode: Int? = nil) async throws -> [JimakuSubtitleFile] {
         var components = self.components
         components.path = "/api/entries/\(id)/files"
+        if let episode {
+            components.queryItems = [URLQueryItem(name: "episode", value: "\(episode)")]
+        }
         let url = components.url!
         var request = URLRequest(url: url)
         request.addValue(apiKey, forHTTPHeaderField: "Authorization")

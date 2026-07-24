@@ -185,49 +185,62 @@ struct MiningSettingsView: View {
 // MARK: - Subtitles settings
 struct SubtitlesSettingsView: View {
     @Environment(UserConfig.self) var userConfig
+    @Environment(\.scenePhase) var scenePhase
     @State var showSubtitleServerDetailedSheet = false
+    @State var isLLMAvailable = false
     
     var body: some View {
         Form {
             @Bindable var userConfig = userConfig
-
-            Toggle(isOn: $userConfig.japaneseFont) {
-                VStack(alignment: .leading) {
-                    Text("Japanese Font")
-
-                    Text("Japanese font will replaces system font when showing subtitles.")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                }
-            }
-            .hanaSettingsRow()
-
-            Toggle(isOn: $userConfig.nativeSubtitleRendering) {
-                VStack(alignment: .leading) {
-                    Text("Native Subtitle Rendering")
-                    
-                    Text("Make subtitle tappable but remove subtitle style")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                }
-            }
-            .hanaSettingsRow()
-            
-            if userConfig.nativeSubtitleRendering {
-                Toggle(isOn: $userConfig.japaneseOnly) {
+            Section {
+                Toggle(isOn: $userConfig.japaneseFont) {
                     VStack(alignment: .leading) {
-                        Text("Japanese Subtitles Only")
-                        
-                        Text("Subtitle cues of other languages will be removed")
+                        Text("Japanese Font")
+
+                        Text("Japanese font will replaces system font when showing subtitles.")
                             .font(.caption)
                             .foregroundStyle(.secondary)
                             .frame(maxWidth: .infinity, alignment: .leading)
                     }
                 }
-                .hanaSettingsRow()
+
+                Toggle(isOn: $userConfig.nativeSubtitleRendering) {
+                    VStack(alignment: .leading) {
+                        Text("Native Subtitle Rendering")
+
+                        Text("Make subtitle tappable but remove subtitle style")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                    }
+                }
+
+                if userConfig.nativeSubtitleRendering {
+                    Toggle(isOn: $userConfig.japaneseOnly) {
+                        VStack(alignment: .leading) {
+                            Text("Japanese Subtitles Only")
+
+                            Text("Subtitle cues of other languages will be removed")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                        }
+                    }
+                }
+
+                Toggle(isOn: $userConfig.loadJimakuByLLM) {
+                    VStack(alignment: .leading) {
+                        Text("Auto loading")
+                        
+                        Text("Load subtitles from Subtitle Server by Apple Intelligence")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                    }
+                }
+                .disabled(!isLLMAvailable || userConfig.jimakuURL.isEmpty)
             }
+            .hanaSettingsRow()
             
             Section {
                 TextField("Server URL", text: $userConfig.jimakuURL)
@@ -252,9 +265,21 @@ struct SubtitlesSettingsView: View {
             .hanaSettingsRow()
         }
         .hanaSettingsScreen()
+        .task {
+            refreshLLMAvailability()
+        }
+        .onChange(of: scenePhase) { _, scenePhase in
+            if scenePhase == .active {
+                refreshLLMAvailability()
+            }
+        }
         .animation(.spring, value: userConfig.nativeSubtitleRendering)
         .navigationTitle("Subtitles")
         .sheet(isPresented: $showSubtitleServerDetailedSheet, content: { SubtitleServerDetailView() })
+    }
+
+    private func refreshLLMAvailability() {
+        isLLMAvailable = LLMAvailability.isAvailable
     }
 }
 

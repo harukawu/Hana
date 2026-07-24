@@ -284,6 +284,7 @@ final class VideoPlayerViewModel {
         persist: Bool = true
     ) async {
         do {
+            hudModel.showSubtitleLoading(state: .loading)
             let preparedSubtitle = try await subtitleState.prepareSubtitle(
                 from: result,
                 japaneseOnly: userConfig.japaneseOnly,
@@ -292,9 +293,11 @@ final class VideoPlayerViewModel {
             try Task.checkCancellation()
             guard playbackSession == expectedSession else { return }
             try subtitleState.importPreparedSubtitle(preparedSubtitle, persist: persist)
+            hudModel.showSubtitleLoading(state: .loaded)
         } catch is CancellationError {
             return
         } catch {
+            hudModel.showSubtitleLoading(state: .failed)
             if case let .success(url) = result {
                 Logger.video.error("Failed to import subtitle at \(url): \(error)")
             } else {
@@ -456,31 +459,60 @@ final class VideoPlayerViewModel {
             }
         )
         
-        // avoid non sendable `modelContext` to be sent to task isolation domain in `async let`
-        let playbackOperation: @MainActor @Sendable () async -> Void = { [self] in
+        let playbackSetupTask = Task {
             await onPlaybackSessionChanged(modelContext: modelContext)
         }
-        let queueOperation: @MainActor @Sendable () async -> Void = { [self] in
+
+        let queueLoadingTask = Task {
             await loadItemsFromSameDirectories(modelContext: modelContext)
         }
 
-        async let playbackSetup: Void = playbackOperation()
-        async let queueLoad: Void = queueOperation()
-
-        for await _ in endEvents {
-            await queueLoad
-            guard userConfig.autoplayNextVideo,
-                  !Task.isCancelled,
-                  playbackSession == expectedSession,
-                  item.url == expectedItemURL else {
+        let playNextVideoTask = Task {
+            for await _ in endEvents {
+                await queueLoadingTask.value
+                guard userConfig.autoplayNextVideo,
+                      !Task.isCancelled,
+                      playbackSession == expectedSession,
+                      item.url == expectedItemURL else {
+                    break
+                }
+                playNextVideo(after: expectedItemURL)
                 break
             }
-            playNextVideo(after: expectedItemURL)
-            break
         }
 
-        await playbackSetup
-        await queueLoad
+        let cacheJimakuSubtitleOfQueueItemsTask = Task {
+            await playbackSetupTask.value
+            await queueLoadingTask.value
+            guard !Task.isCancelled,
+                  playbackSession == expectedSession,
+                  item.url == expectedItemURL else {
+                return
+            }
+            if userConfig.loadJimakuByLLM,
+               LLMAvailability.isAvailable {
+                try await cacheJimakuSubtitleOfQueueItemsByLLM(
+                    japaneseOnly: userConfig.japaneseOnly,
+                    modelContext: modelContext
+                )
+            }
+        }
+
+        await withTaskCancellationHandler {
+            await playbackSetupTask.value
+            await queueLoadingTask.value
+            do {
+                try await cacheJimakuSubtitleOfQueueItemsTask.value
+            } catch {
+                Logger.video.error("Failed to cache subtitles of queued videos by LLM: \(error)")
+            }
+            await playNextVideoTask.value
+        } onCancel: {
+            playbackSetupTask.cancel()
+            queueLoadingTask.cancel()
+            playNextVideoTask.cancel()
+            cacheJimakuSubtitleOfQueueItemsTask.cancel()
+        }
     }
     
     func runAfterPlayStart(_ body: () async -> Void) async {
@@ -533,16 +565,35 @@ final class VideoPlayerViewModel {
                     japaneseOnly: japaneseOnly
                 )
                 
-                var subtitlesInPWD = [PreparedExternalSubtitle]()
+                var externalSubtitles = [PreparedExternalSubtitle]()
                 let (embeddedSubtitlesValue, persistedSubtitlesValue) = try await (embeddedSubtitles, persistedSubtitles)
                 if subtitleState.shouldLoadSubtitlesInPWD(from: item, modelContext: modelContext) {
                     do {
-                        subtitlesInPWD = try await subtitleState.prepareSubtitlesInPWD(
+                        let subtitlesInPWD = try await subtitleState.prepareSubtitlesInPWD(
                             videoURL: item.url,
                             japaneseOnly: japaneseOnly,
                         )
+                        externalSubtitles.append(contentsOf: subtitlesInPWD)
                     } catch {
                         Logger.video.error("Failed to parse subtitles of \(self.item.url) in PWD: \(error)")
+                    }
+                    if embeddedSubtitlesValue.isEmpty,
+                       externalSubtitles.isEmpty,
+                       userConfig.loadJimakuByLLM,
+                       LLMAvailability.isAvailable {
+                        do {
+                            hudModel.showSubtitleLoading(state: .loading)
+                            let llmMatchedSubtitle = try await loadJimakuSubtitleByLLM(
+                                from: item,
+                                japaneseOnly: japaneseOnly,
+                                modelContext: modelContext
+                            )
+                            externalSubtitles.append(llmMatchedSubtitle)
+                            hudModel.showSubtitleLoading(state: .loaded)
+                        } catch {
+                            Logger.video.error("Failed to load Jimaku subtitle by LLM of video \(self.item.url): \(error)")
+                            hudModel.showSubtitleLoading(state: .failed)
+                        }
                     }
                 }
                 
@@ -554,7 +605,7 @@ final class VideoPlayerViewModel {
                 try persistedSubtitlesValue.forEach { persistedSubtitle in
                     try self.subtitleState.importPreparedSubtitle(persistedSubtitle)
                 }
-                try subtitlesInPWD.forEach { subtitleInPWD in
+                try externalSubtitles.forEach { subtitleInPWD in
                     try self.subtitleState.importPreparedSubtitle(subtitleInPWD)
                 }
                 if let selectedSubtitleIndex = item.subtitleStorage.selectedIndex
@@ -835,6 +886,111 @@ final class VideoPlayerViewModel {
     
     func refreshNowPlayingInfo(currentTime: Duration, force: Bool = false) {
         systemMediaManager.refreshNowPlayingInfo(currentTime: currentTime, force: force)
+    }
+
+    // MARK: - Load Jimaku automatically by LLM
+
+    func loadJimakuSubtitleByLLM(
+        from item: VideoItem,
+        japaneseOnly: Bool,
+        modelContext: ModelContext,
+        checkCache: Bool = true
+    ) async throws -> PreparedExternalSubtitle {
+        let localURL: URL
+        if checkCache,
+           let data = try getSubtitleCache(of: item.url, modelContext: modelContext) {
+            let tmpURL = FileStorage.getTempDirectory().appending(path: UUID().uuidString)
+            try data.write(to: tmpURL)
+            localURL = tmpURL
+        } else {
+            let videoName = item.displayTitle
+            let videoDir = item.url.deletingLastPathComponent().lastPathComponent
+            let llmJimakuLoader = LLMJimakuLoader(
+                endpoint: userConfig.jimakuURL,
+                apiKey: userConfig.jimakuKey,
+                videoDir: videoDir,
+                videoName: videoName
+            )
+            let subtitleURL = try await llmJimakuLoader.getSubtitlesURL()
+            localURL = try await JimakuManager.downloadSubtitle(from: subtitleURL)
+        }
+        let preparedSubtitle = try await subtitleState.prepareSubtitle(
+            from: .success(localURL),
+            japaneseOnly: japaneseOnly,
+            securityScoped: false,
+        )
+        return preparedSubtitle
+    }
+
+    func cacheJimakuSubtitleOfQueueItemsByLLM(
+        maxCount: Int = 2,
+        japaneseOnly: Bool,
+        modelContext: ModelContext
+    ) async throws {
+        guard maxCount > 0 else { return }
+        let itemCandidates = itemsFromSameDirectories
+        let maxIndex = itemCandidates.count - 1
+        guard let currentIndex = itemCandidates.firstIndex(where: { $0.url == item.url }),
+              currentIndex != maxIndex else {
+            return
+        }
+        let startIndex = min(currentIndex + 1, maxIndex)
+        let endIndex = min(currentIndex + maxCount, maxIndex)
+        let items = itemCandidates[startIndex...endIndex]
+        for item in items {
+            guard subtitleState.shouldLoadSubtitlesInPWD(from: item, modelContext: modelContext),
+                  try getSubtitleCache(of: item.url, delete: false, modelContext: modelContext) == nil else {
+                continue
+            }
+            do {
+                let preparedSubtitle = try await loadJimakuSubtitleByLLM(
+                    from: item,
+                    japaneseOnly: japaneseOnly,
+                    modelContext: modelContext,
+                    checkCache: false
+                )
+                try saveSubtitleCache(
+                    videoURL: item.url,
+                    subtitleData: preparedSubtitle.data,
+                    modelContext: modelContext
+                )
+            } catch {
+                Logger.video.error("Failed to cache subtitles of queued videos by LLM: \(error)")
+            }
+            if Task.isCancelled { return }
+            await Task.yield()
+        }
+    }
+
+    func getSubtitleCache(of videoURL: URL, delete: Bool = true, modelContext: ModelContext) throws -> Data? {
+        let predicate = #Predicate<SubtitleCache> { cache in
+            cache.videoURL == videoURL
+        }
+        let descriptor = FetchDescriptor(predicate: predicate)
+        let caches = try modelContext.fetch(descriptor)
+        let cache = caches.first
+        let data = cache?.subtitleData
+        if delete,
+           let cache {
+            modelContext.delete(cache)
+            try modelContext.save()
+        }
+        return data
+    }
+
+    func saveSubtitleCache(videoURL: URL, subtitleData: Data, modelContext: ModelContext) throws {
+        let predicate = #Predicate<SubtitleCache> { cache in
+            cache.videoURL == videoURL
+        }
+        let descriptor = FetchDescriptor(predicate: predicate)
+        let caches = try modelContext.fetch(descriptor)
+        if let cache = caches.first {
+            cache.subtitleData = subtitleData
+        } else {
+            let cache = SubtitleCache(videoURL: videoURL, subtitleData: subtitleData)
+            modelContext.insert(cache)
+        }
+        try modelContext.save()
     }
 }
 
