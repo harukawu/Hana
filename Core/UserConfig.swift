@@ -30,6 +30,8 @@ class UserConfig {
     var nativeSubtitleRendering: Bool = true
     var japaneseFont: Bool = true
     var japaneseOnly: Bool = false
+    var subtitleFontSize: Double = 22
+    var subtitleBottomOffset: Double = 0
     
     // MARK: - Mining
     @DefaultsKey(userDefaultsKey: "ankiMiningImageOptions")

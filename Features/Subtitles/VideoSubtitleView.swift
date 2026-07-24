@@ -107,6 +107,7 @@ struct VideoSubtitleView: View {
             }
         }
         .safeAreaPadding(.bottom)
+        .padding(.bottom, CGFloat(userConfig.subtitleBottomOffset))
     }
 }
 
@@ -237,7 +238,10 @@ struct VideoSubtitleText: UIViewRepresentable {
     func makeUIView(context: Context) -> UITappableLabel {
         let label = UITappableLabel(onCharacterTap: onCharacterTap, recognizerName: recognizerName)
         label.textColor = .white
-        label.font = .systemFont(ofSize: 22, weight: .semibold)
+        label.font = .systemFont(
+            ofSize: CGFloat(userConfig.subtitleFontSize),
+            weight: .semibold
+        )
         label.numberOfLines = 0
         label.textAlignment = .center
         label.lineBreakMode = .byCharWrapping
@@ -249,6 +253,10 @@ struct VideoSubtitleText: UIViewRepresentable {
     
     func updateUIView(_ uiView: UITappableLabel, context: Context) {
         uiView.onCharacterTap = onCharacterTap
+        uiView.font = .systemFont(
+            ofSize: CGFloat(userConfig.subtitleFontSize),
+            weight: .semibold
+        )
         uiView.resetText(text: text, highlightRange: highlightRange)
     }
     

@@ -197,18 +197,39 @@ struct SubtitlesSettingsView: View {
                     VStack(alignment: .leading) {
                         Text("Japanese Font")
 
-                        Text("Japanese font will replaces system font when showing subtitles.")
+                        Text("Use Japanese glyph forms when displaying subtitles.")
                             .font(.caption)
                             .foregroundStyle(.secondary)
                             .frame(maxWidth: .infinity, alignment: .leading)
                     }
                 }
 
+                subtitleSlider(
+                    title: "Font Size",
+                    value: $userConfig.subtitleFontSize,
+                    range: 12...48,
+                    step: 1
+                )
+
+                subtitleSlider(
+                    title: "Bottom Offset",
+                    value: $userConfig.subtitleBottomOffset,
+                    range: 0...200,
+                    step: 5
+                )
+            } header: {
+                Text("Appearance")
+            } footer: {
+                Text("Font size and bottom offset apply to native subtitle rendering.")
+            }
+            .hanaSettingsRow()
+
+            Section {
                 Toggle(isOn: $userConfig.nativeSubtitleRendering) {
                     VStack(alignment: .leading) {
                         Text("Native Subtitle Rendering")
 
-                        Text("Make subtitle tappable but remove subtitle style")
+                        Text("Make subtitles tappable, without their original styling.")
                             .font(.caption)
                             .foregroundStyle(.secondary)
                             .frame(maxWidth: .infinity, alignment: .leading)
@@ -227,18 +248,8 @@ struct SubtitlesSettingsView: View {
                         }
                     }
                 }
-
-                Toggle(isOn: $userConfig.loadJimakuByLLM) {
-                    VStack(alignment: .leading) {
-                        Text("Auto loading")
-                        
-                        Text("Load subtitles from Subtitle Server by Apple Intelligence")
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                    }
-                }
-                .disabled(!isLLMAvailable || userConfig.jimakuURL.isEmpty)
+            } header: {
+                Text("Rendering")
             }
             .hanaSettingsRow()
             
@@ -246,20 +257,38 @@ struct SubtitlesSettingsView: View {
                 TextField("Server URL", text: $userConfig.jimakuURL)
                     .autocorrectionDisabled()
                     .textInputAutocapitalization(.never)
-                
+
                 SecureField("Credential", text: $userConfig.jimakuKey)
                     .textContentType(.password)
                     .autocorrectionDisabled()
                     .textInputAutocapitalization(.never)
+
+                Toggle(isOn: $userConfig.loadJimakuByLLM) {
+                    VStack(alignment: .leading) {
+                        Text("Auto Loading")
+
+                        Text("Load subtitles from the configured server using Apple Intelligence.")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                    }
+                }
+                .disabled(autoLoadingDisabledReason != nil)
             } header: {
                 Text("Subtitle Server")
             } footer: {
-                Button {
-                    showSubtitleServerDetailedSheet.toggle()
-                } label: {
-                    Text("Detail")
-                        .font(.footnote)
-                        .bold()
+                VStack(alignment: .leading, spacing: 8) {
+                    if let autoLoadingDisabledReason {
+                        Text(autoLoadingDisabledReason)
+                    }
+
+                    Button {
+                        showSubtitleServerDetailedSheet.toggle()
+                    } label: {
+                        Text("Detail")
+                            .font(.footnote)
+                            .bold()
+                    }
                 }
             }
             .hanaSettingsRow()
@@ -280,6 +309,34 @@ struct SubtitlesSettingsView: View {
 
     private func refreshLLMAvailability() {
         isLLMAvailable = LLMAvailability.isAvailable
+    }
+
+    private var autoLoadingDisabledReason: String? {
+        if !isLLMAvailable {
+            "Auto Loading requires Apple Intelligence."
+        } else if userConfig.jimakuURL.isEmpty {
+            "Enter a server URL to enable Auto Loading."
+        } else {
+            nil
+        }
+    }
+
+    private func subtitleSlider(
+        title: String,
+        value: Binding<Double>,
+        range: ClosedRange<Double>,
+        step: Double
+    ) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack {
+                Text(title)
+                Spacer()
+                Text("\(Int(value.wrappedValue)) pt")
+                    .foregroundStyle(.secondary)
+            }
+
+            Slider(value: value, in: range, step: step)
+        }
     }
 }
 
