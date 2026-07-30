@@ -5,6 +5,7 @@
 //  Created by Haruka on 2026/7/6.
 //
 
+import SwiftData
 import SwiftUI
 import HoshiReader
 
@@ -16,13 +17,17 @@ struct SubtitlesFullScreenView: View {
     private let highlightedIndex: Int?
     private let selectedAudioTrackIndex: Int?
     private let onMiningStart: (@MainActor () -> Void)?
-    
+
+    @Query private var miningHistories: [MiningHistory]
     @State private var selectedCueIndices: Set<Int>
     @State private var lookupRequest: SubtitleLookupRequest?
     @State private var showNoSelectionAlert = false
+    @State private var miningHistoryError = ""
+    @State private var showMiningHistoryError = false
     @Environment(UserConfig.self) private var userConfig
     @Environment(\.dismiss) private var dismiss
-    
+    @Environment(\.modelContext) private var modelContext
+
     init(
         videoTitle: String,
         videoURL: URL,
@@ -43,21 +48,21 @@ struct SubtitlesFullScreenView: View {
         _lookupRequest = State(initialValue: initialRequest)
         _selectedCueIndices = highlightedIndex == nil ? State(initialValue: []) : State(initialValue: [highlightedIndex!])
     }
-    
+
     var body: some View {
         GeometryReader { geometry in
             let subtitleColumnWidth = min(
                 max(geometry.size.width * 0.38, 280),
                 geometry.size.width * 0.5
             )
-            
+
             HStack(spacing: 0) {
                 dictionaryPane
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
                     .clipped()
-                
+
                 Divider()
-                
+
                 SubtitlesTableView(
                     selectedCueIndices: $selectedCueIndices,
                     subtitles: subtitles,
@@ -88,13 +93,22 @@ struct SubtitlesFullScreenView: View {
         } message: {
             Text("There should be at least one selected sentence")
         }
-        
+        .alert("Error", isPresented: $showMiningHistoryError) {
+            Button("OK") {}
+        } message: {
+            Text(miningHistoryError)
+        }
+
     }
-    
+
     @ViewBuilder
     private var dictionaryPane: some View {
         if let lookupRequest {
-            DictionarySearchPanel(query: lookupRequest.query, mediaProvider: self.getVideoResources)
+            DictionarySearchPanel(
+                query: lookupRequest.query,
+                mediaProvider: self.getVideoResources,
+                miningHistorySaver: shouldDeferMining ? Optional.some(self.saveMiningHistory) : nil
+            )
                 .id(lookupRequest.id)
         } else {
             ContentUnavailableView(
@@ -104,30 +118,30 @@ struct SubtitlesFullScreenView: View {
             )
         }
     }
-    
+
     private func handleCharacterTap(
         _ hit: TappableLabelCharacterHit,
         text: String,
         containerFrame: CGRect
     ) {
         let nsText = text as NSString
-        
+
         guard hit.utf16Index >= 0, hit.utf16Index < nsText.length else {
             return
         }
-        
+
         let characterRange = nsText.rangeOfComposedCharacterSequence(at: hit.utf16Index)
         let tappedCharacter = nsText.substring(with: characterRange)
-        
+
         guard !tappedCharacter.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
             return
         }
-        
+
         let selectionRect = hit.characterRect.offsetBy(
             dx: -containerFrame.minX,
             dy: -containerFrame.minY
         )
-        
+
         lookupRequest = SubtitleLookupRequest(
             sentence: text,
             query: nsText.substring(from: characterRange.location),
@@ -135,7 +149,7 @@ struct SubtitlesFullScreenView: View {
             utf16Index: characterRange.location
         )
     }
-    
+
     @concurrent
     func getVideoResources() async throws -> (imageURL: URL, audioURL: URL, videoTitle: String, sentence: String?)? {
         let (selectedCueIndices, cues, subtitleDelay) = await MainActor.run {
@@ -177,5 +191,18 @@ struct SubtitlesFullScreenView: View {
         )
         await onMiningStart?()
         return (imageURL: imageURL, audioURL: audioURL, videoTitle: videoTitle, sentence: sentences.joined(separator: " "))
+    }
+
+    private var shouldDeferMining: Bool {
+        userConfig.miningHistory || !miningHistories.isEmpty
+    }
+
+    func saveMiningHistory(_ noteData: MiningHistoryData) {
+        do {
+            try MiningHistory.saveIfNeeded(noteData, in: modelContext)
+        } catch {
+            miningHistoryError = error.localizedDescription
+            showMiningHistoryError = true
+        }
     }
 }

@@ -5,6 +5,7 @@
 //  Created by Haruka on 2026/7/6.
 //
 
+import SwiftData
 import SwiftUI
 import HoshiReader
 
@@ -18,13 +19,17 @@ struct VideoSubtitleView: View {
     let onLookupVisibilityChanged: ((Bool) -> Void)?
     private let onMiningStart: (@MainActor () -> Void)?
 
+    @Query private var miningHistories: [MiningHistory]
     @Environment(UserConfig.self) private var userConfig
+    @Environment(\.modelContext) private var modelContext
     @State private var lookupRequest: SubtitleLookupRequest?
     @State private var highlightRange: NSRange?
     @State private var isLookupVisible = false
-    
+
     @State private var showFullscreenCover = false
-    
+    @State private var miningHistoryError = ""
+    @State private var showMiningHistoryError = false
+
     init(
         cueIndex: Int,
         subtitles: [SubtitleCue],
@@ -44,19 +49,20 @@ struct VideoSubtitleView: View {
         self.onLookupVisibilityChanged = onLookupVisibilityChanged
         self.onMiningStart = onMiningStart
     }
-    
+
     var body: some View {
         GeometryReader { geometry in
             ZStack(alignment: .bottom) {
                 textView(containerFrame: geometry.frame(in: .global))
                     .zIndex(100)
-                
+
                 if let lookupRequest {
                     HoshiReader::DictionaryLookupOverlay(
                         query: lookupRequest.query,
                         sentence: lookupRequest.sentence,
                         selectionRect: lookupRequest.selectionRect,
                         mediaProvider: self.getVideoResources,
+                        miningHistorySaver: shouldDeferMining ? Optional.some(self.saveMiningHistory) : nil,
                         onMatchedUTF16Length: { length in
                             handleMatch(length: length, requestID: lookupRequest.id)
                         },
@@ -73,8 +79,13 @@ struct VideoSubtitleView: View {
                 alignment: .bottom
             )
         }
+        .alert("Error", isPresented: $showMiningHistoryError) {
+            Button("OK") {}
+        } message: {
+            Text(miningHistoryError)
+        }
     }
-    
+
     private func textView(containerFrame: CGRect) -> some View {
         VideoSubtitleText(
             text: subtitles[cueIndex].text,
@@ -96,12 +107,12 @@ struct VideoSubtitleView: View {
                 cornerRadius: 3,
                 style: .continuous
             )
-            
+
             ZStack {
                 shape
                     .fill(.ultraThinMaterial)
                     .opacity(0.30)
-                
+
                 shape
                     .fill(.black.opacity(0.5))
             }
@@ -119,30 +130,30 @@ extension VideoSubtitleView {
         }
         return highlightRange
     }
-    
+
     private func handleCharacterTap(
         _ hit: TappableLabelCharacterHit,
         text: String,
         containerFrame: CGRect
     ) {
         let nsText = text as NSString
-        
+
         guard hit.utf16Index >= 0, hit.utf16Index < nsText.length else {
             return
         }
-        
+
         let characterRange = nsText.rangeOfComposedCharacterSequence(at: hit.utf16Index)
         let tappedCharacter = nsText.substring(with: characterRange)
-        
+
         guard !tappedCharacter.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
             return
         }
-        
+
         let selectionRect = hit.characterRect.offsetBy(
             dx: -containerFrame.minX,
             dy: -containerFrame.minY
         )
-        
+
         highlightRange = nil
         lookupRequest = SubtitleLookupRequest(
             sentence: text,
@@ -151,41 +162,41 @@ extension VideoSubtitleView {
             utf16Index: characterRange.location
         )
     }
-    
+
     private func handleMatch(length: Int, requestID: UUID) {
         guard let lookupRequest,
               lookupRequest.id == requestID,
               length > 0 else {
             return
         }
-        
+
         let sentenceLength = (lookupRequest.sentence as NSString).length
         let availableLength = sentenceLength - lookupRequest.utf16Index
         let clampedLength = min(length, availableLength)
-        
+
         guard clampedLength > 0 else {
             dismissLookup(requestID: requestID)
             return
         }
-        
+
         highlightRange = NSRange(
             location: lookupRequest.utf16Index,
             length: clampedLength
         )
         setLookupVisible(true)
     }
-    
+
     private func dismissLookup(requestID: UUID) {
         guard lookupRequest?.id == requestID else { return }
-        
+
         lookupRequest = nil
         highlightRange = nil
         setLookupVisible(false)
     }
-    
+
     private func setLookupVisible(_ isVisible: Bool) {
         guard isLookupVisible != isVisible else { return }
-        
+
         isLookupVisible = isVisible
         onLookupVisibilityChanged?(isVisible)
     }
@@ -224,6 +235,19 @@ extension VideoSubtitleView {
         await onMiningStart?()
         return (imageURL: imageURL, audioURL: audioURL, videoTitle: videoTitle, sentence: nil)
     }
+
+    private var shouldDeferMining: Bool {
+        userConfig.miningHistory || !miningHistories.isEmpty
+    }
+
+    func saveMiningHistory(_ noteData: MiningHistoryData) {
+        do {
+            try MiningHistory.saveIfNeeded(noteData, in: modelContext)
+        } catch {
+            miningHistoryError = error.localizedDescription
+            showMiningHistoryError = true
+        }
+    }
 }
 
 // MARK: - UILable Representable
@@ -232,7 +256,7 @@ struct VideoSubtitleText: UIViewRepresentable {
     let highlightRange: NSRange?
     let onCharacterTap: ((TappableLabelCharacterHit, String) -> Void)?
     let recognizerName: String?
-    
+
     @Environment(UserConfig.self) private var userConfig
 
     func makeUIView(context: Context) -> UITappableLabel {
@@ -250,7 +274,7 @@ struct VideoSubtitleText: UIViewRepresentable {
         }
         return label
     }
-    
+
     func updateUIView(_ uiView: UITappableLabel, context: Context) {
         uiView.onCharacterTap = onCharacterTap
         uiView.font = .systemFont(
@@ -259,7 +283,7 @@ struct VideoSubtitleText: UIViewRepresentable {
         )
         uiView.resetText(text: text, highlightRange: highlightRange)
     }
-    
+
     func sizeThatFits(_ proposal: ProposedViewSize, uiView: UITappableLabel, context: Context) -> CGSize? {
         let unconstrained = uiView.sizeThatFits(
             CGSize(
@@ -267,17 +291,17 @@ struct VideoSubtitleText: UIViewRepresentable {
                 height: CGFloat.greatestFiniteMagnitude
             )
         )
-        
+
         let maximumWidth = proposal.width ?? unconstrained.width
         let finalWidth = min(maximumWidth, ceil(unconstrained.width))
-        
+
         let fitted = uiView.sizeThatFits(
             CGSize(
                 width: finalWidth,
                 height: .greatestFiniteMagnitude
             )
         )
-        
+
         return CGSize(
             width: finalWidth,
             height: ceil(fitted.height)

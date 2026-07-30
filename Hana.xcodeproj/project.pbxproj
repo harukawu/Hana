@@ -41,6 +41,7 @@
 				JimakuManager.swift,
 				LLMJimakuLoader.swift,
 				MediaExtractor.swift,
+				MiningHistoryCoordinator.swift,
 				SubtitleParser.swift,
 				UserConfig.swift,
 				WebDavManager.swift,
@@ -114,6 +115,7 @@
 			membershipExceptions = (
 				Appearance.swift,
 				Jimaku.swift,
+				MiningHistory.swift,
 				WebDav.swift,
 			);
 			target = 906F6D8D2FB1F125001C9FD1 /* Hana */;

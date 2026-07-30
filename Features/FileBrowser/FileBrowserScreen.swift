@@ -13,22 +13,28 @@ import OSLog
 public struct FileBrowserScreen: View {
     private let rootURL: URL
     @Query(sort: \VideoHistory.modificationDate, order: .reverse) private var histories: [VideoHistory]
+    @Query private var miningHistories: [MiningHistory]
     @Environment(\.modelContext) private var modelContext
     @Environment(\.scenePhase) private var scenePhase
     @Environment(UserConfig.self) private var userConfig
+    @Environment(MiningHistoryCoordinator.self) private var miningHistoryCoordinator
     @State private var path = NavigationPath()
     @State private var showFileImporter: Bool = false
     @State private var refreshTrigger: UUID = UUID()
     @State private var selectedWebDAVSource: WebDavSource? = nil
-    
+
     @State private var showVideoHistoryUnavailableAlert = false
     @State private var unavailableVideoHistory: VideoHistory? = nil
-    
+
+    @State private var showMiningHistoryAlert = false
+
     // we tried to use this to scroll back to leading when exiting from video.
     // However, there is several frame drop. Good job Apple.
 //    @State private var horizontalScrollPosition = ScrollPosition(idType: UUID.self)
-    
+
     public var body: some View {
+        @Bindable var miningHistoryCoordinator = miningHistoryCoordinator
+
         GeometryReader { geometry in
             NavigationStack(path: $path) {
                 FileBrowserView(
@@ -88,7 +94,7 @@ public struct FileBrowserScreen: View {
                         Button("Cancel", role: .cancel) {
                             unavailableVideoHistory = nil
                         }
-                        
+
                         Button("Delete", role: .destructive) {
                             if let unavailableVideoHistory {
                                 deleteHistory(unavailableVideoHistory)
@@ -104,10 +110,66 @@ public struct FileBrowserScreen: View {
                         }
                     }
                 )
+                .alert(
+                    "Mining",
+                    isPresented: $miningHistoryCoordinator.isPendingAlertPresented,
+                    actions: {
+                        Button("Cancel", role: .cancel) {}
+
+                        Button("Delete", role: .destructive) {
+                            miningHistoryCoordinator.deletePending(in: modelContext)
+                        }
+
+                        Button("Retry", role: .confirm) {
+                            miningHistoryCoordinator.retryPending(in: modelContext)
+                        }
+                        .buttonStyle(.borderedProminent)
+                    },
+                    message: {
+                        Text("There is a pending mining history which might fail to be added to Anki")
+                    }
+                )
+                .alert(
+                    "Error",
+                    isPresented: $miningHistoryCoordinator.isErrorAlertPresented,
+                    actions: {
+                        Button("Cancel", role: .cancel) {
+                            miningHistoryCoordinator.dismissError()
+                        }
+
+                        if miningHistoryCoordinator.unavailableHistoryID != nil {
+                            Button("Delete", role: .destructive) {
+                                miningHistoryCoordinator.deleteUnavailable(in: modelContext)
+                            }
+
+                            Button("Retry", role: .confirm) {
+                                miningHistoryCoordinator.retryUnavailable(in: modelContext)
+                            }
+                            .buttonStyle(.borderedProminent)
+                        }
+                    },
+                    message: {
+                        Text(miningHistoryCoordinator.errorMessage)
+                    }
+                )
+                .alert("Mining", isPresented: $showMiningHistoryAlert) {
+                    Button("Cancel", role: .cancel) {}
+
+                    Button("Delete", role: .destructive) {
+                        miningHistoryCoordinator.deleteAll(in: modelContext)
+                    }
+
+                    Button("Add", role: .confirm) {
+                        miningHistoryCoordinator.startNext(in: modelContext)
+                    }
+                    .buttonStyle(.borderedProminent)
+                } message: {
+                    Text("There are \(miningHistories.count) mining histories not added to Anki.")
+                }
             }
         }
     }
-    
+
     init(rootURL: URL) {
         self.rootURL = rootURL
     }
@@ -117,7 +179,17 @@ public struct FileBrowserScreen: View {
 extension FileBrowserScreen {
     @ToolbarContentBuilder
     var toolbar: some ToolbarContent {
-        
+
+        if !miningHistories.isEmpty {
+            ToolbarItem(placement: .topBarLeading) {
+                Button("Mining History", systemImage: "tray.full") {
+                    showMiningHistoryAlert.toggle()
+                }
+                .labelStyle(.iconOnly)
+                .badge(miningHistories.count)
+            }
+        }
+
         #if DEBUG
         ToolbarItem(placement: .topBarTrailing) {
             Menu("", systemImage: "externaldrive.connected.to.line.below") {
@@ -132,7 +204,7 @@ extension FileBrowserScreen {
             }
         }
         #endif
-        
+
         ToolbarItem(placement: .topBarTrailing) {
             Button {
                 showFileImporter = true
@@ -140,7 +212,7 @@ extension FileBrowserScreen {
                 Image(systemName: "plus")
             }
         }
-        
+
     }
 }
 
@@ -160,7 +232,7 @@ extension FileBrowserScreen {
             .frame(height: HistoryCollectionView.preferredHeight(maxHeight: maxHeight))
         }
     }
-    
+
     private func openHistory(_ history: VideoHistory) {
         var isStale = false
         guard let resolvedURL = try? URL(resolvingBookmarkData: history.urlBookmark, bookmarkDataIsStale: &isStale),
@@ -174,14 +246,14 @@ extension FileBrowserScreen {
         }
         path.append(history.toItem())
     }
-    
+
     private func deleteHistory(_ history: VideoHistory) {
         withAnimation(.bouncy) {
             modelContext.delete(history)
             try? modelContext.save()
         }
     }
-    
+
 }
 
 // MARK: - SwiftData
@@ -248,7 +320,7 @@ extension FileBrowserScreen {
 
 // MARK: - helper methods for FileBrowserScreen
 extension FileBrowserScreen {
-    
+
     var supportedVideoType: [UTType] {
         var supportedTypes = VideoFileSupport.knownVideoExtensions.sorted().compactMap { fileExtension in
             UTType(filenameExtension: fileExtension)
@@ -256,7 +328,7 @@ extension FileBrowserScreen {
         supportedTypes.append(.folder)
         return supportedTypes
     }
-    
+
     func onImportFiles(result: Result<URL, any Error>) -> Void {
         switch result {
         case .success(let file):
@@ -271,6 +343,6 @@ extension FileBrowserScreen {
             Logger.fileStorage.log("Failed to import files to videos directory: \(error, privacy: .public)")
         }
     }
-    
-    
+
+
 }

@@ -11,7 +11,7 @@ enum VideoPlayerSettingsRoute: View, CaseIterable {
     case playback
     case subtitles
     case mining
-    
+
     var body: some View {
         switch self {
         case .playback:
@@ -22,7 +22,7 @@ enum VideoPlayerSettingsRoute: View, CaseIterable {
             MiningSettingsView()
         }
     }
-    
+
     @ViewBuilder
     var label: some View {
         switch self {
@@ -40,7 +40,7 @@ enum VideoPlayerSettingsRoute: View, CaseIterable {
 
 struct PlaybackSettingsView: View {
     @Environment(UserConfig.self) private var userConfig
-    
+
     var body: some View {
         @Bindable var userConfig = userConfig
         Form {
@@ -53,7 +53,7 @@ struct PlaybackSettingsView: View {
                 .pickerStyle(.segmented)
             }
             .hanaSettingsRow()
-            
+
             Section("Playback") {
                 Toggle("Autoplay Next Video", isOn: $userConfig.autoplayNextVideo)
             }
@@ -67,17 +67,31 @@ struct PlaybackSettingsView: View {
 // MARK: - Mining settings
 struct MiningSettingsView: View {
     @Environment(UserConfig.self) private var userConfig
-    
+
     var body: some View {
         @Bindable var userConfig = userConfig
-        
+
         Form {
+            Section("Mining") {
+                Toggle(isOn: $userConfig.miningHistory) {
+                    VStack(alignment: .leading) {
+                        Text("Mining History")
+
+                        Text("Store mined notes in Hana and add them to Anki later.")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                    }
+                }
+            }
+            .hanaSettingsRow()
+
             Section {
                 Picker("Format", selection: $userConfig.imageOptions.format) {
                     Text("JPEG").tag(MediaExtractor.ImageFormat.jpeg)
                     Text("PNG").tag(MediaExtractor.ImageFormat.png)
                 }
-                
+
                 Picker("Maximum Height", selection: $userConfig.imageOptions.maximumHeight) {
                     Text("Original").tag(Int?.none)
                     Text("480 px").tag(Int?.some(480))
@@ -85,7 +99,7 @@ struct MiningSettingsView: View {
                     Text("1080 px").tag(Int?.some(1080))
                     Text("1440 px").tag(Int?.some(1440))
                 }
-                
+
                 if userConfig.imageOptions.format == .jpeg {
                     VStack(alignment: .leading, spacing: 8) {
                         HStack {
@@ -94,7 +108,7 @@ struct MiningSettingsView: View {
                             Text("\(userConfig.imageOptions.jpegQuality)%")
                                 .foregroundStyle(.secondary)
                         }
-                        
+
                         Slider(
                             value: jpegQuality,
                             in: 0...100,
@@ -116,13 +130,13 @@ struct MiningSettingsView: View {
                         value: "\(userConfig.audioOptions.bitrateKilobitsPerSecond) kbps"
                     )
                 }
-                
+
                 Picker("Channels", selection: $userConfig.audioOptions.channelCount) {
                     Text("Mono").tag(1)
                     Text("Stereo").tag(2)
                 }
                 .pickerStyle(.segmented)
-                
+
                 Stepper(value: audioPaddingMilliseconds, in: 0...3_000, step: 50) {
                     valueLabel(
                         title: "Padding",
@@ -135,7 +149,7 @@ struct MiningSettingsView: View {
                 Text("Audio is exported as MP3. Padding adds time before and after the selected subtitle range.")
             }
             .hanaSettingsRow()
-            
+
             Section {
                 Button("Reset Mining Defaults", role: .destructive) {
                     userConfig.imageOptions = .init()
@@ -147,7 +161,7 @@ struct MiningSettingsView: View {
         .hanaSettingsScreen()
         .navigationTitle("Mining")
     }
-    
+
     private var jpegQuality: Binding<Double> {
         Binding {
             Double(userConfig.imageOptions.jpegQuality)
@@ -155,7 +169,7 @@ struct MiningSettingsView: View {
             userConfig.imageOptions.jpegQuality = Int(newValue)
         }
     }
-    
+
     private var audioPaddingMilliseconds: Binding<Int> {
         Binding {
             Int(userConfig.audioOptions.padding / .milliseconds(1))
@@ -163,7 +177,7 @@ struct MiningSettingsView: View {
             userConfig.audioOptions.padding = .milliseconds(newValue)
         }
     }
-    
+
     private func valueLabel(title: String, value: String) -> some View {
         HStack {
             Text(title)
@@ -172,7 +186,7 @@ struct MiningSettingsView: View {
                 .foregroundStyle(.secondary)
         }
     }
-    
+
     private static func formattedMilliseconds(_ milliseconds: Int) -> String {
         if milliseconds >= 1_000, milliseconds.isMultiple(of: 1_000) {
             "\(milliseconds / 1_000) s"
@@ -188,7 +202,7 @@ struct SubtitlesSettingsView: View {
     @Environment(\.scenePhase) var scenePhase
     @State var showSubtitleServerDetailedSheet = false
     @State var isLLMAvailable = false
-    
+
     var body: some View {
         Form {
             @Bindable var userConfig = userConfig
@@ -252,7 +266,7 @@ struct SubtitlesSettingsView: View {
                 Text("Rendering")
             }
             .hanaSettingsRow()
-            
+
             Section {
                 TextField("Server URL", text: $userConfig.jimakuURL)
                     .autocorrectionDisabled()
@@ -342,7 +356,7 @@ struct SubtitlesSettingsView: View {
 
 struct SubtitleServerDetailView: View {
     @Environment(\.dismiss) private var dismiss
-    
+
     var body: some View {
         NavigationStack {
             List {
@@ -355,14 +369,14 @@ struct SubtitleServerDetailView: View {
                     Text("Compatibility")
                 }
                 .hanaSettingsRow()
-                
+
                 Section("Connection") {
                     requirement(
                         title: "Base URL",
                         detail: "Enter an absolute HTTPS URL containing only the server origin, "
                             + "for example https://subtitles.example.com. Endpoint paths are added by Hana."
                     )
-                    
+
                     requirement(
                         title: "Authorization",
                         detail: "Every API request includes the credential exactly as entered in the "
@@ -370,14 +384,14 @@ struct SubtitleServerDetailView: View {
                     )
                 }
                 .hanaSettingsRow()
-                
+
                 Section("Required Endpoints") {
                     endpoint(
                         path: "/api/entries/search?query={title}",
                         detail: "Return HTTP 200 with a JSON array. Every entry must contain id as an "
                             + "integer, name as a string, and japanese_name as a string or null."
                     )
-                    
+
                     endpoint(
                         path: "/api/entries/{id}/files",
                         detail: "Return HTTP 200 with a JSON array. Every file must contain name as a "
@@ -385,15 +399,15 @@ struct SubtitleServerDetailView: View {
                     )
                 }
                 .hanaSettingsRow()
-                
+
                 Section("Error Responses") {
                     Text("Hana recognizes 401 for an invalid credential and 429 for rate limiting.")
-                    
+
                     Text(
                         "The files endpoint may also return 400 for an invalid ID or 404 when an entry "
                         + "is not found."
                     )
-                    
+
                     Text(
                         "A 429 response may include x-ratelimit-reset-after so Hana can report when "
                         + "requests can resume."
@@ -413,29 +427,29 @@ struct SubtitleServerDetailView: View {
             }
         }
     }
-    
+
     private func requirement(title: String, detail: String) -> some View {
         VStack(alignment: .leading, spacing: 4) {
             Text(title)
                 .font(.headline)
-            
+
             Text(detail)
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
         }
         .padding(.vertical, 2)
     }
-    
+
     private func endpoint(path: String, detail: String) -> some View {
         VStack(alignment: .leading, spacing: 6) {
             Text("GET")
                 .font(.caption.bold())
                 .foregroundStyle(.secondary)
-            
+
             Text(path)
                 .font(.subheadline.monospaced())
                 .textSelection(.enabled)
-            
+
             Text(detail)
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
