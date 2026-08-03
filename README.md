@@ -1,3 +1,6 @@
+# Notice
+Due to unknown reason, Apple has taken down this app. You can use other alternatives on Apple platforms, e.g. [Hibiki](https://github.com/hajisensai/hibiki).
+
 # Hana
 
 [![Swift](https://img.shields.io/badge/Swift-6.3-orange.svg)](https://swift.org)
